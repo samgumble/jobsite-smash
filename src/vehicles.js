@@ -158,9 +158,10 @@ export class Vehicle {
     const input = this.input || {}
 
     // --- Steering: ease toward target for a smoother feel ---
+    // Chase cam looks along +Z, so screen-right maps to world -X.
     let targetSteer = 0
-    if (input.left) targetSteer -= cfg.maxSteer
-    if (input.right) targetSteer += cfg.maxSteer
+    if (input.left) targetSteer += cfg.maxSteer
+    if (input.right) targetSteer -= cfg.maxSteer
     const k = Math.min(1, cfg.steerSpeed * dt)
     this.steer += (targetSteer - this.steer) * k
 
