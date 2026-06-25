@@ -41,5 +41,17 @@ Score/combo for destruction. Portfolio piece.
 11. Build + deploy to Netlify/Vercel
 
 ## Current phase
-Phase 2 complete: Rapier physics (ground collider + falling test bodies, fixed-timestep loop).
-Next: Phase 3 (data-driven bulldozer with raycast vehicle, WASD + touch).
+Phase 3 complete: data-driven bulldozer on a Rapier raycast vehicle.
+- vehicles.js: VEHICLE_CONFIGS + Vehicle class (chassis, 4 wheels, AWD, steered front)
+- controls.js: keyboard (WASD/arrows/space) + on-screen touch d-pad/brake
+- Chase camera (smoothed) in main.js; OrbitControls removed
+- Tuned: engineForce 2600/wheel, maxSpeed cap 20 m/s, linearDamping 0.4
+- Verified: drives, smashes crates, steers correctly (D=right), stays grounded
+Next: Phase 4 (camera module: switchable chase + top-down, toggle with C).
+
+## Dev/preview notes
+- node/npm only on PATH via /opt/homebrew/bin (Homebrew). The Bash tool and
+  preview tool don't inherit it, so .claude/launch.json wraps the dev server in
+  `/bin/sh -c "export PATH=/opt/homebrew/bin:$PATH && cd jobsite-smash && npm run dev"`.
+- launch.json lives at the PARENT dir (.../ConGTA/.claude/launch.json), since the
+  preview tool anchors to the working directory, not this subfolder.

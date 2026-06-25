@@ -8,6 +8,13 @@ export async function initPhysics(gravity = { x: 0, y: -9.81 * 2.2, z: 0 }) {
   // Pairs of { mesh, body } whose transforms we sync every frame.
   const dynamic = []
 
+  // Callbacks run just before world.step() — e.g. the vehicle controller,
+  // which must apply forces to its chassis before the sim integrates.
+  const beforeStep = []
+  function onBeforeStep(fn) {
+    beforeStep.push(fn)
+  }
+
   function addGround(size = 200) {
     const body = world.createRigidBody(RAPIER.RigidBodyDesc.fixed())
     const collider = RAPIER.ColliderDesc.cuboid(size / 2, 0.5, size / 2)
@@ -36,7 +43,8 @@ export async function initPhysics(gravity = { x: 0, y: -9.81 * 2.2, z: 0 }) {
   }
 
   // Step the simulation and push transforms onto the linked meshes.
-  function step() {
+  function step(dt = world.timestep) {
+    for (const cb of beforeStep) cb(dt)
     world.step()
     for (const { mesh, body } of dynamic) {
       const t = body.translation()
@@ -46,5 +54,5 @@ export async function initPhysics(gravity = { x: 0, y: -9.81 * 2.2, z: 0 }) {
     }
   }
 
-  return { RAPIER, world, addGround, addBox, step, dynamic }
+  return { RAPIER, world, addGround, addBox, step, onBeforeStep, dynamic }
 }
