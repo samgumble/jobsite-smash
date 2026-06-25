@@ -10,7 +10,6 @@ export function createWorld(scene, physics) {
   buildContainers(scene, physics)
   buildBarriers(scene, physics)
   buildShed(scene, physics)
-  buildDirtMounds(scene)
   const cones = buildCones(scene, physics)
 
   return { HALF, cones }
@@ -30,17 +29,6 @@ function buildGround(scene) {
   ground.rotation.x = -Math.PI / 2
   ground.receiveShadow = true
   scene.add(ground)
-
-  // A few faint dirt "patches" / churned areas for variety.
-  const patchMat = new THREE.MeshStandardMaterial({ color: 0x6f5d40, roughness: 1, transparent: true, opacity: 0.5 })
-  for (let i = 0; i < 10; i++) {
-    const r = 6 + Math.random() * 10
-    const patch = new THREE.Mesh(new THREE.CircleGeometry(r, 20), patchMat)
-    patch.rotation.x = -Math.PI / 2
-    patch.position.set((Math.random() - 0.5) * 110, 0.01, (Math.random() - 0.5) * 110)
-    patch.receiveShadow = true
-    scene.add(patch)
-  }
 }
 
 function makeGroundTexture() {
@@ -208,24 +196,6 @@ function buildShed(scene, physics) {
   scene.add(roof)
 
   physics.addFixedBox({ hx: w / 2, hy: h / 2, hz: d / 2 }, { x, y: h / 2, z })
-}
-
-// --- Decorative dirt mounds ---
-function buildDirtMounds(scene) {
-  const mat = new THREE.MeshStandardMaterial({ color: 0x7a6643, roughness: 1 })
-  const spots = [
-    { x: 20, z: -20, r: 4 },
-    { x: -30, z: 4, r: 5 },
-    { x: 6, z: 48, r: 3.5 },
-  ]
-  for (const s of spots) {
-    const mound = new THREE.Mesh(new THREE.SphereGeometry(s.r, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2), mat)
-    mound.position.set(s.x, 0, s.z)
-    mound.scale.y = 0.4
-    mound.receiveShadow = true
-    mound.castShadow = true
-    scene.add(mound)
-  }
 }
 
 // --- Traffic cones (dynamic & light, fun to scatter) ---
