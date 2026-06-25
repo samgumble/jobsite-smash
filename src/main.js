@@ -78,8 +78,8 @@ initPhysics().then((physics) => {
   // --- Destructible piles scattered around the jobsite (Phase 5) ---
   const destructibles = createDestructibles(scene, physics)
   if (import.meta.env.DEV) window.__dz = destructibles
-  destructibles.spawnBrickWall({ x: 0, z: 22 }, { cols: 7, rows: 5 })
-  destructibles.spawnBrickWall({ x: -26, z: 14 }, { cols: 6, rows: 4, yaw: Math.PI / 2 })
+  destructibles.spawnBrickWall({ x: 0, z: 18 }, { cols: 8, rows: 6 })
+  destructibles.spawnBrickWall({ x: -26, z: 14 }, { cols: 6, rows: 5, yaw: Math.PI / 2 })
   destructibles.spawnPalletStack({ x: 16, z: 18 }, { count: 6 })
   destructibles.spawnPalletStack({ x: 22, z: 26 }, { count: 5 })
   destructibles.spawnBarrelCluster({ x: -16, z: 30 }, { count: 7 })

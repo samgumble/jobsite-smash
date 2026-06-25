@@ -25,15 +25,16 @@ export function createDestructibles(scene, physics) {
   }
 
   // --- Brick wall: rows/columns of small bricks, the showpiece smash ---
-  function spawnBrickWall(center, { cols = 6, rows = 4, yaw = 0 } = {}) {
+  function spawnBrickWall(center, { cols = 7, rows = 6, yaw = 0 } = {}) {
     const bw = 0.7, bh = 0.35, bd = 0.4
-    const geo = new THREE.BoxGeometry(bw, bh, bd)
+    const gap = 0.015 // hairline gap so bricks rest cleanly without solver jitter
+    const geo = new THREE.BoxGeometry(bw - gap, bh - gap, bd)
     const cosY = Math.cos(yaw), sinY = Math.sin(yaw)
+    const q = meshQuat(yaw)
     for (let r = 0; r < rows; r++) {
-      // running-bond offset on alternate courses
-      const offset = (r % 2) * (bw / 2)
       for (let c = 0; c < cols; c++) {
-        const localX = (c - (cols - 1) / 2) * bw + offset
+        // Clean aligned grid (flush ends) so it reads as a wall, not a heap.
+        const localX = (c - (cols - 1) / 2) * bw
         const x = center.x + localX * cosY
         const z = center.z + localX * sinY
         const y = bh / 2 + r * bh
@@ -41,11 +42,11 @@ export function createDestructibles(scene, physics) {
         mesh.rotation.y = yaw
         const body = physics.addBox(
           mesh,
-          { hx: bw / 2, hy: bh / 2, hz: bd / 2 },
+          { hx: (bw - gap) / 2, hy: (bh - gap) / 2, hz: bd / 2 },
           { x, y, z },
           { density: 25, friction: 0.8 }
         )
-        body.setRotation(meshQuat(yaw), false)
+        body.setRotation(q, false)
         track(mesh, body, 'brick')
       }
     }
