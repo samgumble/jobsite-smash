@@ -41,13 +41,16 @@ Score/combo for destruction. Portfolio piece.
 11. Build + deploy to Netlify/Vercel
 
 ## Current phase
-Phase 4 complete: camera module.
-- camera.js: CameraRig with chase + topdown modes, toggle with C, smoothed follow
-- topdown is world-aligned, +Z maps to screen-up; chase resets camera.up to +Y
-- #cam-mode HUD indicator updates on toggle
-- Bulldozer handling tuned faster: engineForce 3400, maxSpeed 28, damping 0.18
-  (real top speed ~21.5 m/s, grounded/stable)
-Next: Phase 5 (destructible piles: clusters that scatter on impact).
+Phase 5 complete: destructible piles.
+- destructibles.js: createDestructibles() with spawnBrickWall (running bond),
+  spawnPalletStack, spawnBarrelCluster, spawnCrateStack; tracks all pieces in items[]
+- physics.js: added addCylinder (barrels) and remove(body) for future despawn
+- piles scattered around the jobsite; verified brick wall stands then scatters on hit
+- shared geo/materials per pile type to limit allocations
+Next: Phase 6 (score/combo system + HUD).
+
+## Debug handles (DEV builds only)
+window.__vehicle and window.__dz (destructibles) for tuning via preview_eval.
 
 ## Dev/preview notes
 - node/npm only on PATH via /opt/homebrew/bin (Homebrew). The Bash tool and

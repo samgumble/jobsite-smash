@@ -4,6 +4,7 @@ import { initPhysics } from './physics.js'
 import { createControls } from './controls.js'
 import { Vehicle } from './vehicles.js'
 import { CameraRig } from './camera.js'
+import { createDestructibles } from './destructibles.js'
 
 // --- Renderer ---
 const canvas = document.querySelector('#game')
@@ -68,32 +69,23 @@ window.addEventListener('resize', () => {
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
 })
 
-// --- Game setup (Phase 3) ---
-const boxColors = [0xd94f3d, 0xf2c14e, 0x4f86d9, 0x57a85a, 0xe07a3f, 0x8e6fc4]
+// --- Game setup ---
 const input = createControls()
 
 initPhysics().then((physics) => {
   physics.addGround(300)
 
-  // A pile of crates ahead of the spawn, ready to be smashed.
-  for (let i = 0; i < 24; i++) {
-    const size = 1.2 + Math.random() * 0.9
-    const color = boxColors[i % boxColors.length]
-    const mesh = new THREE.Mesh(
-      new THREE.BoxGeometry(size, size, size),
-      new THREE.MeshStandardMaterial({ color, roughness: 0.7 })
-    )
-    mesh.castShadow = true
-    mesh.receiveShadow = true
-    scene.add(mesh)
-
-    const position = {
-      x: (Math.random() - 0.5) * 10,
-      y: size / 2 + Math.random() * 3,
-      z: 22 + (Math.random() - 0.5) * 10,
-    }
-    physics.addBox(mesh, { hx: size / 2, hy: size / 2, hz: size / 2 }, position)
-  }
+  // --- Destructible piles scattered around the jobsite (Phase 5) ---
+  const destructibles = createDestructibles(scene, physics)
+  if (import.meta.env.DEV) window.__dz = destructibles
+  destructibles.spawnBrickWall({ x: 0, z: 22 }, { cols: 7, rows: 5 })
+  destructibles.spawnBrickWall({ x: -26, z: 14 }, { cols: 6, rows: 4, yaw: Math.PI / 2 })
+  destructibles.spawnPalletStack({ x: 16, z: 18 }, { count: 6 })
+  destructibles.spawnPalletStack({ x: 22, z: 26 }, { count: 5 })
+  destructibles.spawnBarrelCluster({ x: -16, z: 30 }, { count: 7 })
+  destructibles.spawnBarrelCluster({ x: 10, z: 38 }, { count: 6 })
+  destructibles.spawnCrateStack({ x: 28, z: -6 }, { base: 4 })
+  destructibles.spawnCrateStack({ x: -22, z: -10 }, { base: 3 })
 
   // --- Vehicle ---
   const vehicle = new Vehicle(scene, physics, 'bulldozer', { x: 0, y: 1.8, z: 0 })
