@@ -41,13 +41,13 @@ Score/combo for destruction. Portfolio piece.
 11. Build + deploy to Netlify/Vercel
 
 ## Current phase
-Phase 3 complete: data-driven bulldozer on a Rapier raycast vehicle.
-- vehicles.js: VEHICLE_CONFIGS + Vehicle class (chassis, 4 wheels, AWD, steered front)
-- controls.js: keyboard (WASD/arrows/space) + on-screen touch d-pad/brake
-- Chase camera (smoothed) in main.js; OrbitControls removed
-- Tuned: engineForce 2600/wheel, maxSpeed cap 20 m/s, linearDamping 0.4
-- Verified: drives, smashes crates, steers correctly (D=right), stays grounded
-Next: Phase 4 (camera module: switchable chase + top-down, toggle with C).
+Phase 4 complete: camera module.
+- camera.js: CameraRig with chase + topdown modes, toggle with C, smoothed follow
+- topdown is world-aligned, +Z maps to screen-up; chase resets camera.up to +Y
+- #cam-mode HUD indicator updates on toggle
+- Bulldozer handling tuned faster: engineForce 3400, maxSpeed 28, damping 0.18
+  (real top speed ~21.5 m/s, grounded/stable)
+Next: Phase 5 (destructible piles: clusters that scatter on impact).
 
 ## Dev/preview notes
 - node/npm only on PATH via /opt/homebrew/bin (Homebrew). The Bash tool and

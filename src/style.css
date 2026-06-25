@@ -19,3 +19,20 @@ body {
   height: 100%;
   touch-action: none;
 }
+
+#cam-mode {
+  position: fixed;
+  top: 14px;
+  left: 14px;
+  z-index: 10;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: rgba(20, 20, 28, 0.45);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  backdrop-filter: blur(2px);
+  user-select: none;
+  pointer-events: none;
+}

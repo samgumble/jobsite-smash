@@ -3,6 +3,7 @@ import * as THREE from 'three'
 import { initPhysics } from './physics.js'
 import { createControls } from './controls.js'
 import { Vehicle } from './vehicles.js'
+import { CameraRig } from './camera.js'
 
 // --- Renderer ---
 const canvas = document.querySelector('#game')
@@ -99,23 +100,13 @@ initPhysics().then((physics) => {
   vehicle.setInput(input)
   if (import.meta.env.DEV) window.__vehicle = vehicle // dev tuning handle
 
-  // --- Chase camera ---
-  const camPos = new THREE.Vector3()
-  const camTarget = new THREE.Vector3()
-  const CHASE = { back: 11, height: 6, lookAhead: 2, lookUp: 1.4 }
-
-  function updateChaseCam(dt) {
-    const p = vehicle.getPosition()
-    const fwd = vehicle.getForwardDirection()
-    camPos.set(p.x - fwd.x * CHASE.back, p.y + CHASE.height, p.z - fwd.z * CHASE.back)
-    const a = 1 - Math.exp(-6 * dt) // frame-rate independent smoothing
-    camera.position.lerp(camPos, a)
-    camTarget.set(p.x + fwd.x * CHASE.lookAhead, p.y + CHASE.lookUp, p.z + fwd.z * CHASE.lookAhead)
-    camera.lookAt(camTarget)
+  // --- Camera rig (chase / top-down, toggle with C) ---
+  const cameraRig = new CameraRig(camera)
+  const camIndicator = document.querySelector('#cam-mode')
+  cameraRig.onModeChange = (mode) => {
+    if (camIndicator) camIndicator.textContent = `CAM: ${mode === 'chase' ? 'CHASE' : 'TOP-DOWN'}`
   }
-
-  // Position the camera behind the vehicle immediately.
-  updateChaseCam(1)
+  cameraRig.update(0, vehicle, true) // snap into place on spawn
 
   // --- Render loop ---
   let lastTime = performance.now()
@@ -136,7 +127,7 @@ initPhysics().then((physics) => {
       accumulator -= fixedStep
     }
 
-    updateChaseCam(delta)
+    cameraRig.update(delta, vehicle)
     renderer.render(scene, camera)
   }
   requestAnimationFrame(animate)
