@@ -124,7 +124,7 @@ function makeChainLinkTexture() {
   return new THREE.CanvasTexture(c)
 }
 
-// --- Shipping containers (static obstacles, two-tone corrugated look) ---
+// --- Shipping containers (static, corrugated-metal look + doors) ---
 function buildContainers(scene, physics) {
   const colors = [0xb23b3b, 0x2f6fb0, 0x3a7d4a, 0xc99a2e]
   const layout = [
@@ -136,17 +136,56 @@ function buildContainers(scene, physics) {
   ]
   const w = 6, h = 2.6, d = 2.6
   const geo = new THREE.BoxGeometry(w, h, d)
+  const ridge = makeCorrugationTexture()
   for (const o of layout) {
-    const mat = new THREE.MeshStandardMaterial({ color: colors[o.c], roughness: 0.6, metalness: 0.3 })
+    const tex = ridge.clone()
+    tex.needsUpdate = true
+    tex.wrapS = tex.wrapT = THREE.RepeatWrapping
+    tex.repeat.set(14, 1)
+    const mat = new THREE.MeshStandardMaterial({
+      color: colors[o.c],
+      map: tex,
+      roughness: 0.55,
+      metalness: 0.45,
+    })
     const mesh = new THREE.Mesh(geo, mat)
     mesh.position.set(o.x, h / 2, o.z)
     mesh.rotation.y = o.ry
     mesh.castShadow = true
     mesh.receiveShadow = true
     scene.add(mesh)
-    const q = quatY(o.ry)
-    physics.addFixedBox({ hx: w / 2, hy: h / 2, hz: d / 2 }, { x: o.x, y: h / 2, z: o.z }, q)
+
+    // door panel detail on one end
+    const doorMat = new THREE.MeshStandardMaterial({ color: colors[o.c], roughness: 0.5, metalness: 0.5 })
+    const door = new THREE.Mesh(new THREE.BoxGeometry(0.08, h * 0.86, d * 0.9), doorMat)
+    const dx = Math.cos(o.ry) * (w / 2 + 0.02)
+    const dz = -Math.sin(o.ry) * (w / 2 + 0.02)
+    door.position.set(o.x + dx, h / 2, o.z + dz)
+    door.rotation.y = o.ry
+    scene.add(door)
+    for (const off of [-0.45, 0.45]) {
+      const bar = new THREE.Mesh(new THREE.BoxGeometry(0.12, h * 0.78, 0.08), new THREE.MeshStandardMaterial({ color: 0x2a2a2a, metalness: 0.6, roughness: 0.4 }))
+      bar.position.set(o.x + dx + Math.cos(o.ry) * 0.04, h / 2, o.z + dz + off * Math.cos(o.ry))
+      bar.rotation.y = o.ry
+      scene.add(bar)
+    }
+
+    physics.addFixedBox({ hx: w / 2, hy: h / 2, hz: d / 2 }, { x: o.x, y: h / 2, z: o.z }, quatY(o.ry))
   }
+}
+
+function makeCorrugationTexture() {
+  const c = document.createElement('canvas')
+  c.width = 32
+  c.height = 4
+  const ctx = c.getContext('2d')
+  for (let i = 0; i < 32; i++) {
+    const v = Math.sin((i / 32) * Math.PI * 2)
+    const l = Math.round(212 + v * 43) // 169..255: bright with ridge shading
+    ctx.fillStyle = `rgb(${l},${l},${l})`
+    ctx.fillRect(i, 0, 1, 4)
+  }
+  return new THREE.CanvasTexture(c)
 }
 
 // --- Jersey barriers in a row (static) ---
@@ -201,8 +240,28 @@ function buildShed(scene, physics) {
 // --- Traffic cones (dynamic & light, fun to scatter) ---
 function buildCones(scene, physics) {
   const radius = 0.4, height = 1.0
-  const geo = new THREE.ConeGeometry(radius, height, 12)
-  const mat = new THREE.MeshStandardMaterial({ color: 0xff6a1a, roughness: 0.6 })
+  const geo = new THREE.ConeGeometry(radius, height, 14)
+  const mat = new THREE.MeshStandardMaterial({ color: 0xff6a1a, roughness: 0.55 })
+  const bandMat = new THREE.MeshStandardMaterial({ color: 0xf2f2f2, roughness: 0.5 })
+  const baseMat = new THREE.MeshStandardMaterial({ color: 0x1f1f24, roughness: 0.8 })
+  // reflective band (a short truncated cone hugging the body) + square base
+  const bandGeo = new THREE.CylinderGeometry(radius * 0.62, radius * 0.78, 0.16, 14)
+  const baseGeo = new THREE.BoxGeometry(radius * 1.9, 0.1, radius * 1.9)
+
+  const makeCone = () => {
+    const g = new THREE.Group()
+    const cone = new THREE.Mesh(geo, mat)
+    cone.castShadow = true
+    g.add(cone)
+    const band = new THREE.Mesh(bandGeo, bandMat)
+    band.position.y = 0.02
+    g.add(band)
+    const base = new THREE.Mesh(baseGeo, baseMat)
+    base.position.y = -height / 2 + 0.05
+    base.castShadow = true
+    g.add(base)
+    return g
+  }
   const bodies = []
   // a loose scatter plus a tidy line; keep clear of the spawn area (origin)
   const spots = []
@@ -216,10 +275,9 @@ function buildCones(scene, physics) {
   }
   for (let i = 0; i < 6; i++) spots.push({ x: -12 + i * 3, z: 10 })
   for (const s of spots) {
-    const mesh = new THREE.Mesh(geo, mat)
-    mesh.castShadow = true
-    scene.add(mesh)
-    const body = physics.addCone(mesh, { halfHeight: height / 2, radius }, { x: s.x, y: height / 2, z: s.z }, { density: 6, friction: 0.6 })
+    const group = makeCone()
+    scene.add(group)
+    const body = physics.addCone(group, { halfHeight: height / 2, radius }, { x: s.x, y: height / 2, z: s.z }, { density: 6, friction: 0.6 })
     bodies.push(body)
   }
   return bodies

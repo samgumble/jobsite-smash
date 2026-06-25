@@ -5,8 +5,8 @@ import * as THREE from 'three'
 export const VEHICLE_CONFIGS = {
   bulldozer: {
     name: 'Bulldozer',
-    bodyColor: 0xf2b134,
-    accentColor: 0x3a3a42,
+    bodyColor: 0xfec810, // Caterpillar yellow
+    accentColor: 0x23262b,
     chassis: { w: 2.6, h: 1.0, l: 4.2 },
     mass: 2200,
     linearDamping: 0.18,
@@ -106,46 +106,127 @@ export class Vehicle {
     physics.onBeforeStep((dt) => this._update(dt))
   }
 
+  // Caterpillar D-series styling: crawler tracks, sloped hood, ROPS cab,
+  // U-blade with push arms, exhaust stack, rear ripper. Built from primitives.
   _buildVisuals() {
     const cfg = this.config
-    const c = cfg.chassis
-    const bodyMat = new THREE.MeshStandardMaterial({ color: cfg.bodyColor, roughness: 0.6, metalness: 0.2 })
-    const accentMat = new THREE.MeshStandardMaterial({ color: cfg.accentColor, roughness: 0.7 })
+    const yellow = new THREE.MeshStandardMaterial({ color: cfg.bodyColor, roughness: 0.5, metalness: 0.25 })
+    const dark = new THREE.MeshStandardMaterial({ color: cfg.accentColor, roughness: 0.7, metalness: 0.4 })
+    const steel = new THREE.MeshStandardMaterial({ color: 0x9aa0a6, roughness: 0.35, metalness: 0.85 })
+    const bladeMat = new THREE.MeshStandardMaterial({ color: 0xf2b400, roughness: 0.45, metalness: 0.4 })
+    const glass = new THREE.MeshStandardMaterial({ color: 0x121a22, roughness: 0.15, metalness: 0.5 })
 
-    // main body
-    const body = new THREE.Mesh(new THREE.BoxGeometry(c.w, c.h, c.l), bodyMat)
-    body.castShadow = true
-    body.receiveShadow = true
-    this.root.add(body)
+    const add = (geo, mat, x, y, z, rx = 0, ry = 0, rz = 0) => {
+      const m = new THREE.Mesh(geo, mat)
+      m.position.set(x, y, z)
+      m.rotation.set(rx, ry, rz)
+      m.castShadow = true
+      m.receiveShadow = true
+      this.root.add(m)
+      return m
+    }
+    const box = (w, h, l) => new THREE.BoxGeometry(w, h, l)
 
-    // cab toward the rear
-    const cab = new THREE.Mesh(new THREE.BoxGeometry(c.w * 0.7, c.h * 0.9, c.l * 0.35), accentMat)
-    cab.position.set(0, c.h * 0.85, -c.l * 0.18)
-    cab.castShadow = true
-    this.root.add(cab)
+    // === Crawler tracks (left & right) ===
+    this.trackMat = makeTreadMaterial()
+    this._buildTrack(-1.18, add, dark)
+    this._buildTrack(1.18, add, dark)
+    // belly pan between the tracks
+    add(box(2.0, 0.5, 3.6), dark, 0, -0.5, -0.1)
 
-    // dozer blade at the front
-    const blade = new THREE.Mesh(
-      new THREE.BoxGeometry(c.w * 1.15, c.h * 1.1, 0.3),
-      new THREE.MeshStandardMaterial({ color: 0xdfe3e6, roughness: 0.4, metalness: 0.5 })
-    )
-    blade.position.set(0, -c.h * 0.1, c.l / 2 + 0.35)
-    blade.castShadow = true
-    blade.receiveShadow = true
+    // === Main body / engine hood (sloped down toward front) ===
+    add(box(2.0, 0.85, 1.9), yellow, 0, 0.2, -0.3) // engine block
+    add(box(1.8, 0.6, 1.4), yellow, 0, 0.0, 1.05, -0.14) // sloped hood
+    add(box(1.86, 0.5, 0.12), dark, 0, 0.02, 1.72, -0.14) // front grille
+    // side fenders along the hood
+    add(box(0.12, 0.35, 2.6), yellow, 1.0, 0.45, 0.2)
+    add(box(0.12, 0.35, 2.6), yellow, -1.0, 0.45, 0.2)
+
+    // === ROPS cab toward the rear ===
+    add(box(1.7, 0.12, 1.6), dark, 0, 0.55, -0.9) // cab floor
+    // corner ROPS posts
+    for (const sx of [-0.78, 0.78]) {
+      for (const sz of [-0.62, 0.62]) add(box(0.13, 1.0, 0.13), dark, sx, 1.05, -0.9 + sz)
+    }
+    add(box(1.74, 0.14, 1.64), dark, 0, 1.6, -0.9) // cab roof
+    // glass panels
+    add(box(1.5, 0.85, 0.06), glass, 0, 1.08, -0.18) // front windshield
+    add(box(0.06, 0.85, 1.4), glass, 0.82, 1.08, -0.9) // right window
+    add(box(0.06, 0.85, 1.4), glass, -0.82, 1.08, -0.9) // left window
+    add(box(1.5, 0.85, 0.06), glass, 0, 1.08, -1.62) // rear window
+
+    // seat hint
+    add(box(0.5, 0.5, 0.5), dark, 0, 0.85, -0.7)
+
+    // === Exhaust stack ===
+    add(new THREE.CylinderGeometry(0.1, 0.1, 1.0, 10), dark, 0.62, 0.95, 0.55)
+    add(new THREE.CylinderGeometry(0.13, 0.1, 0.18, 10), steel, 0.62, 1.5, 0.55)
+
+    // === U-blade with push arms ===
+    const blade = new THREE.Group()
+    blade.add(this._mkMesh(box(2.9, 1.15, 0.18), bladeMat, 0, 0, 0))
+    blade.add(this._mkMesh(box(2.9, 0.3, 0.4), bladeMat, 0, 0.5, 0.16, -0.5)) // top spill lip
+    blade.add(this._mkMesh(box(2.9, 0.18, 0.32), steel, 0, -0.55, 0.12, 0.5)) // cutting edge
+    blade.add(this._mkMesh(box(0.18, 1.1, 0.2), bladeMat, 1.35, 0, 0.12, 0, 0.35)) // right wing
+    blade.add(this._mkMesh(box(0.18, 1.1, 0.2), bladeMat, -1.35, 0, 0.12, 0, -0.35)) // left wing
+    blade.position.set(0, -0.15, 2.45)
     this.root.add(blade)
+    // push arms from hull to blade
+    const arm = new THREE.CylinderGeometry(0.1, 0.1, 2.0, 8)
+    add(arm, dark, 0.95, -0.25, 1.55, Math.PI / 2 - 0.25, 0, 0)
+    add(arm, dark, -0.95, -0.25, 1.55, Math.PI / 2 - 0.25, 0, 0)
+
+    // === Rear ripper ===
+    add(box(1.6, 0.25, 0.3), yellow, 0, -0.1, -2.2) // ripper beam
+    add(box(0.18, 0.9, 0.18), dark, 0.5, -0.55, -2.35, 0.25, 0, 0) // shank
+    add(box(0.18, 0.9, 0.18), dark, -0.5, -0.55, -2.35, 0.25, 0, 0)
+    add(new THREE.ConeGeometry(0.12, 0.4, 6), steel, 0.5, -1.05, -2.45, Math.PI, 0, 0) // tip
+    add(new THREE.ConeGeometry(0.12, 0.4, 6), steel, -0.5, -1.05, -2.45, Math.PI, 0, 0)
+  }
+
+  _mkMesh(geo, mat, x, y, z, rx = 0, ry = 0, rz = 0) {
+    const m = new THREE.Mesh(geo, mat)
+    m.position.set(x, y, z)
+    m.rotation.set(rx, ry, rz)
+    m.castShadow = true
+    m.receiveShadow = true
+    return m
+  }
+
+  // One crawler track assembly: frame, sprocket/idler, road wheels, tread band.
+  _buildTrack(sx, add, dark) {
+    const len = 4.4, h = 0.55, w = 0.62
+    const cy = -0.62
+    // outer + inner frame
+    add(new THREE.BoxGeometry(w, h, len), dark, sx, cy, -0.1)
+    // rounded ends (idler front, sprocket rear)
+    const endGeo = new THREE.CylinderGeometry(0.5, 0.5, w + 0.04, 14)
+    endGeo.rotateZ(Math.PI / 2)
+    add(endGeo, dark, sx, cy, len / 2 - 0.1)
+    add(endGeo, dark, sx, cy, -len / 2 - 0.1)
+    // tread band (animated): a thin box hugging the outer face
+    const band = new THREE.Mesh(new THREE.BoxGeometry(w + 0.08, 0.62, len + 0.95), this.trackMat)
+    band.position.set(sx, cy, -0.1)
+    band.castShadow = true
+    band.receiveShadow = true
+    this.root.add(band)
+    // road wheels along the bottom
+    const rwGeo = new THREE.CylinderGeometry(0.26, 0.26, w + 0.06, 10)
+    rwGeo.rotateZ(Math.PI / 2)
+    for (let i = 0; i < 4; i++) {
+      add(rwGeo, dark, sx, cy - 0.16, -1.4 + i * 0.95)
+    }
   }
 
   _buildWheelMesh(connection) {
+    // The raycast wheels still drive the physics, but they're hidden — the
+    // crawler tracks represent the machine visually instead.
     const w = this.config.wheel
-    const geo = new THREE.CylinderGeometry(w.radius, w.radius, w.width, 16)
-    geo.rotateZ(Math.PI / 2) // align cylinder axis with local X (the axle)
-    const mesh = new THREE.Mesh(
-      geo,
-      new THREE.MeshStandardMaterial({ color: 0x1c1c22, roughness: 0.8 })
-    )
-    mesh.castShadow = true
+    const geo = new THREE.CylinderGeometry(w.radius, w.radius, w.width, 8)
+    geo.rotateZ(Math.PI / 2)
+    const mesh = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color: 0x111111 }))
+    mesh.visible = false
 
-    // pivot handles position + steering; mesh spins about its baked X axis
     const pivot = new THREE.Group()
     pivot.position.set(connection.x, connection.y, connection.z)
     pivot.add(mesh)
@@ -197,14 +278,9 @@ export class Vehicle {
     this.root.position.set(t.x, t.y, t.z)
     this.root.quaternion.set(r.x, r.y, r.z, r.w)
 
-    for (let i = 0; i < this.wheelMeshes.length; i++) {
-      const { pivot, mesh } = this.wheelMeshes[i]
-      const w = this.config.wheel
-      let len = this.controller.wheelSuspensionLength(i)
-      if (!Number.isFinite(len)) len = this.config.suspension.restLength
-      pivot.position.y = w.offsetY - len
-      pivot.rotation.y = this.controller.wheelSteering(i) || 0
-      mesh.rotation.x = this.controller.wheelRotation(i) || 0
+    // Scroll the track tread texture in proportion to ground speed.
+    if (this.trackMat && this.trackMat.map) {
+      this.trackMat.map.offset.x -= this.controller.currentVehicleSpeed() * 0.016
     }
   }
 
@@ -226,4 +302,24 @@ export class Vehicle {
   getSpeed() {
     return this.controller.currentVehicleSpeed()
   }
+}
+
+// Canvas-generated track tread (grouser links) for the crawler tracks.
+function makeTreadMaterial() {
+  const c = document.createElement('canvas')
+  c.width = 64
+  c.height = 32
+  const ctx = c.getContext('2d')
+  ctx.fillStyle = '#2a2d33'
+  ctx.fillRect(0, 0, 64, 32)
+  for (let i = 0; i < 64; i += 8) {
+    ctx.fillStyle = '#15171b'
+    ctx.fillRect(i, 0, 4, 32)
+    ctx.fillStyle = '#3c4047'
+    ctx.fillRect(i + 4, 0, 2, 32)
+  }
+  const tex = new THREE.CanvasTexture(c)
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping
+  tex.repeat.set(6, 1)
+  return new THREE.MeshStandardMaterial({ map: tex, roughness: 0.8, metalness: 0.3 })
 }

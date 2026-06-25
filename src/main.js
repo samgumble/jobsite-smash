@@ -4,6 +4,7 @@ import { initPhysics } from './physics.js'
 import { createControls } from './controls.js'
 import { Vehicle } from './vehicles.js'
 import { CameraRig } from './camera.js'
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js'
 import { createDestructibles } from './destructibles.js'
 import { createWorld } from './world.js'
 import { createScore } from './score.js'
@@ -15,11 +16,17 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
 renderer.setSize(window.innerWidth, window.innerHeight)
 renderer.shadowMap.enabled = true
 renderer.shadowMap.type = THREE.PCFShadowMap
+renderer.toneMapping = THREE.ACESFilmicToneMapping
+renderer.toneMappingExposure = 1.05
 
 // --- Scene ---
 const scene = new THREE.Scene()
-scene.background = new THREE.Color(0x87ceeb)
-scene.fog = new THREE.Fog(0x87ceeb, 60, 200)
+scene.background = new THREE.Color(0x9fd2ec)
+scene.fog = new THREE.Fog(0x9fd2ec, 70, 230)
+
+// Image-based lighting for realistic metal/PBR reflections.
+const pmrem = new THREE.PMREMGenerator(renderer)
+scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture
 
 // --- Camera ---
 const camera = new THREE.PerspectiveCamera(
