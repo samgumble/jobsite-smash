@@ -41,4 +41,5 @@ Score/combo for destruction. Portfolio piece.
 11. Build + deploy to Netlify/Vercel
 
 ## Current phase
-Phase 1: scene boilerplate
+Phase 2 complete: Rapier physics (ground collider + falling test bodies, fixed-timestep loop).
+Next: Phase 3 (data-driven bulldozer with raycast vehicle, WASD + touch).

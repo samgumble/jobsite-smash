@@ -1,6 +1,7 @@
 import './style.css'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
+import { initPhysics } from './physics.js'
 
 // --- Renderer ---
 const canvas = document.querySelector('#game')
@@ -8,7 +9,7 @@ const renderer = new THREE.WebGLRenderer({ canvas, antialias: true })
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
 renderer.setSize(window.innerWidth, window.innerHeight)
 renderer.shadowMap.enabled = true
-renderer.shadowMap.type = THREE.PCFSoftShadowMap
+renderer.shadowMap.type = THREE.PCFShadowMap
 
 // --- Scene ---
 const scene = new THREE.Scene()
@@ -57,20 +58,6 @@ grid.material.opacity = 0.35
 grid.material.transparent = true
 scene.add(grid)
 
-// --- Test boxes (confirm lighting + shadows + depth) ---
-const boxColors = [0xd94f3d, 0xf2c14e, 0x4f86d9, 0x57a85a]
-boxColors.forEach((color, i) => {
-  const size = 2 + i * 0.6
-  const box = new THREE.Mesh(
-    new THREE.BoxGeometry(size, size, size),
-    new THREE.MeshStandardMaterial({ color, roughness: 0.7 })
-  )
-  box.position.set((i - 1.5) * 5, size / 2, 0)
-  box.castShadow = true
-  box.receiveShadow = true
-  scene.add(box)
-})
-
 // --- Controls (temporary, Phase 1 only) ---
 const controls = new OrbitControls(camera, renderer.domElement)
 controls.enableDamping = true
@@ -84,10 +71,56 @@ window.addEventListener('resize', () => {
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
 })
 
-// --- Render loop ---
-function animate() {
+// --- Physics (Phase 2) ---
+const boxColors = [0xd94f3d, 0xf2c14e, 0x4f86d9, 0x57a85a, 0xe07a3f, 0x8e6fc4]
+
+initPhysics().then((physics) => {
+  physics.addGround(200)
+
+  // Drop a loose stack of dynamic boxes so they tumble and settle.
+  for (let i = 0; i < 18; i++) {
+    const size = 1.4 + Math.random() * 1.2
+    const color = boxColors[i % boxColors.length]
+    const mesh = new THREE.Mesh(
+      new THREE.BoxGeometry(size, size, size),
+      new THREE.MeshStandardMaterial({ color, roughness: 0.7 })
+    )
+    mesh.castShadow = true
+    mesh.receiveShadow = true
+    scene.add(mesh)
+
+    const position = {
+      x: (Math.random() - 0.5) * 8,
+      y: 4 + i * 1.6,
+      z: (Math.random() - 0.5) * 8,
+    }
+    const body = physics.addBox(mesh, { hx: size / 2, hy: size / 2, hz: size / 2 }, position)
+    // Random initial spin so the pile scatters instead of stacking neatly.
+    body.setAngvel(
+      { x: (Math.random() - 0.5) * 3, y: (Math.random() - 0.5) * 3, z: (Math.random() - 0.5) * 3 },
+      true
+    )
+  }
+
+  // --- Render loop (with physics step) ---
+  let lastTime = performance.now()
+  let accumulator = 0
+  const fixedStep = 1 / 60
+
+  function animate(now) {
+    requestAnimationFrame(animate)
+
+    // Fixed-timestep physics so the sim is framerate-independent.
+    const delta = Math.min((now - lastTime) / 1000, 0.1)
+    lastTime = now
+    accumulator += delta
+    while (accumulator >= fixedStep) {
+      physics.step()
+      accumulator -= fixedStep
+    }
+
+    controls.update()
+    renderer.render(scene, camera)
+  }
   requestAnimationFrame(animate)
-  controls.update()
-  renderer.render(scene, camera)
-}
-animate()
+})
