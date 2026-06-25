@@ -41,13 +41,16 @@ Score/combo for destruction. Portfolio piece.
 11. Build + deploy to Netlify/Vercel
 
 ## Current phase
-Phase 5 complete: destructible piles.
-- destructibles.js: createDestructibles() with spawnBrickWall (running bond),
-  spawnPalletStack, spawnBarrelCluster, spawnCrateStack; tracks all pieces in items[]
-- physics.js: added addCylinder (barrels) and remove(body) for future despawn
-- piles scattered around the jobsite; verified brick wall stands then scatters on hit
-- shared geo/materials per pile type to limit allocations
-Next: Phase 6 (score/combo system + HUD).
+Phases 5, 6, 8 complete (8 brought forward at user request).
+- Phase 5 destructibles.js: brick wall (clean grid), pallet/barrel/crate piles
+- Phase 6 score.js: velocity-threshold smash detection, combo multiplier (x1..x8),
+  HUD (#score + #combo badge); cones also scorable. Score starts at 0.
+- Phase 8 world.js: procedural canvas dirt/gravel ground, chain-link perimeter
+  fence (+solid colliders), shipping containers, jersey barriers, site shed,
+  dirt mounds, 16 scatterable traffic cones. physics.js: addCone, addFixedBox.
+- ~195 destructible pieces + props, all stable at rest.
+Next: Phase 7 (vehicle roster, switch with a key) then Phase 9 (juice),
+Phase 10 (perf: instancing/despawn — body count is getting high), Phase 11 (deploy).
 
 ## Debug handles (DEV builds only)
 window.__vehicle and window.__dz (destructibles) for tuning via preview_eval.

@@ -6,6 +6,7 @@ import { Vehicle } from './vehicles.js'
 import { CameraRig } from './camera.js'
 import { createDestructibles } from './destructibles.js'
 import { createWorld } from './world.js'
+import { createScore } from './score.js'
 
 // --- Renderer ---
 const canvas = document.querySelector('#game')
@@ -62,7 +63,7 @@ initPhysics().then((physics) => {
   physics.addGround(300)
 
   // --- Static jobsite world: dirt ground, fence, containers, props ---
-  createWorld(scene, physics)
+  const world = createWorld(scene, physics)
 
   // --- Destructible piles scattered around the jobsite ---
   const destructibles = createDestructibles(scene, physics)
@@ -82,6 +83,14 @@ initPhysics().then((physics) => {
   destructibles.spawnCrateStack({ x: -22, z: -10 }, { base: 3 })
   destructibles.spawnCrateStack({ x: 8, z: -42 }, { base: 4 })
   destructibles.spawnCrateStack({ x: -10, z: 52 }, { base: 3 })
+
+  // --- Scoring: every destructible piece + every cone is scorable ---
+  const scorables = destructibles.items.map((i) => ({ body: i.body, type: i.type, scored: false }))
+  for (const body of world.cones) scorables.push({ body, type: 'cone', scored: false })
+  const score = createScore({
+    scoreEl: document.querySelector('#score'),
+    comboEl: document.querySelector('#combo'),
+  })
 
   // --- Vehicle ---
   const vehicle = new Vehicle(scene, physics, 'bulldozer', { x: 0, y: 1.8, z: 0 })
@@ -115,6 +124,8 @@ initPhysics().then((physics) => {
       accumulator -= fixedStep
     }
 
+    score.detect(scorables)
+    score.update(delta)
     cameraRig.update(delta, vehicle)
     renderer.render(scene, camera)
   }

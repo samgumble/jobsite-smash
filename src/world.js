@@ -234,10 +234,17 @@ function buildCones(scene, physics) {
   const geo = new THREE.ConeGeometry(radius, height, 12)
   const mat = new THREE.MeshStandardMaterial({ color: 0xff6a1a, roughness: 0.6 })
   const bodies = []
-  // a loose scatter plus a couple of tidy lines
+  // a loose scatter plus a tidy line; keep clear of the spawn area (origin)
   const spots = []
-  for (let i = 0; i < 10; i++) spots.push({ x: (Math.random() - 0.5) * 60, z: (Math.random() - 0.5) * 60 })
-  for (let i = 0; i < 6; i++) spots.push({ x: -12 + i * 3, z: 8 })
+  for (let i = 0; i < 10; i++) {
+    let x, z
+    do {
+      x = (Math.random() - 0.5) * 60
+      z = (Math.random() - 0.5) * 60
+    } while (Math.hypot(x, z) < 10)
+    spots.push({ x, z })
+  }
+  for (let i = 0; i < 6; i++) spots.push({ x: -12 + i * 3, z: 10 })
   for (const s of spots) {
     const mesh = new THREE.Mesh(geo, mat)
     mesh.castShadow = true
