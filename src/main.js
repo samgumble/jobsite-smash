@@ -75,21 +75,38 @@ initPhysics().then((physics) => {
   // --- Destructible piles scattered around the jobsite ---
   const destructibles = createDestructibles(scene, physics)
   if (import.meta.env.DEV) window.__dz = destructibles
+  // brick + cinder walls
   destructibles.spawnBrickWall({ x: 0, z: 18 }, { cols: 8, rows: 6 })
   destructibles.spawnBrickWall({ x: -26, z: 14 }, { cols: 6, rows: 5, yaw: Math.PI / 2 })
   destructibles.spawnBrickWall({ x: 44, z: -22 }, { cols: 7, rows: 5, yaw: Math.PI / 2 })
+  destructibles.spawnCinderWall({ x: 22, z: 4 }, { cols: 6, rows: 4 })
+  destructibles.spawnCinderWall({ x: -44, z: -2 }, { cols: 5, rows: 4, yaw: Math.PI / 2 })
+  // pallets + lumber
   destructibles.spawnPalletStack({ x: 16, z: 18 }, { count: 6 })
   destructibles.spawnPalletStack({ x: 22, z: 26 }, { count: 5 })
   destructibles.spawnPalletStack({ x: -38, z: -16 }, { count: 7 })
   destructibles.spawnPalletStack({ x: 52, z: 30 }, { count: 5 })
+  destructibles.spawnPlankPile({ x: 6, z: 30 }, { count: 9 })
+  destructibles.spawnPlankPile({ x: -18, z: -28 }, { count: 8 })
+  destructibles.spawnPlankPile({ x: 40, z: 12 }, { count: 8 })
+  // barrels + pipes
   destructibles.spawnBarrelCluster({ x: -16, z: 30 }, { count: 7 })
   destructibles.spawnBarrelCluster({ x: 10, z: 38 }, { count: 6 })
   destructibles.spawnBarrelCluster({ x: -50, z: 22 }, { count: 8 })
   destructibles.spawnBarrelCluster({ x: 36, z: -34 }, { count: 6 })
+  destructibles.spawnPipeStack({ x: -32, z: 40 }, { rows: 3 })
+  destructibles.spawnPipeStack({ x: 30, z: 44 }, { rows: 4, yaw: Math.PI / 2 })
+  destructibles.spawnPipeStack({ x: 54, z: -8 }, { rows: 3 })
+  // crates
   destructibles.spawnCrateStack({ x: 28, z: -6 }, { base: 4 })
   destructibles.spawnCrateStack({ x: -22, z: -10 }, { base: 3 })
   destructibles.spawnCrateStack({ x: 8, z: -42 }, { base: 4 })
   destructibles.spawnCrateStack({ x: -10, z: 52 }, { base: 3 })
+  destructibles.spawnCrateStack({ x: 48, z: 48 }, { base: 3 })
+  // porta-potties
+  destructibles.spawnPortaPotty({ x: 12, z: -16 })
+  destructibles.spawnPortaPotty({ x: 14, z: -16, yaw: 0.2 })
+  destructibles.spawnPortaPotty({ x: -34, z: 28, yaw: 0.5 })
 
   // --- Scoring: every destructible piece + every cone is scorable ---
   const scorables = destructibles.items.map((i) => ({ body: i.body, type: i.type, scored: false }))
@@ -98,6 +115,8 @@ initPhysics().then((physics) => {
     scoreEl: document.querySelector('#score'),
     comboEl: document.querySelector('#combo'),
   })
+  // Let the piles settle before scoring counts (no points for spawn jitter).
+  setTimeout(() => score.arm(), 1500)
 
   // --- Vehicle ---
   const vehicle = new Vehicle(scene, physics, 'bulldozer', { x: 0, y: 2.3, z: 0 })

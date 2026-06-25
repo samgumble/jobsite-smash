@@ -308,21 +308,22 @@ export class Vehicle {
 }
 
 // Canvas-generated track tread (grouser links) for the crawler tracks.
+// High contrast so the scrolling motion reads clearly while driving.
 function makeTreadMaterial() {
   const c = document.createElement('canvas')
   c.width = 64
   c.height = 32
   const ctx = c.getContext('2d')
-  ctx.fillStyle = '#2a2d33'
-  ctx.fillRect(0, 0, 64, 32)
-  for (let i = 0; i < 64; i += 8) {
-    ctx.fillStyle = '#15171b'
-    ctx.fillRect(i, 0, 4, 32)
-    ctx.fillStyle = '#3c4047'
-    ctx.fillRect(i + 4, 0, 2, 32)
+  for (let i = 0; i < 64; i += 16) {
+    ctx.fillStyle = '#101216' // dark recess
+    ctx.fillRect(i, 0, 16, 32)
+    ctx.fillStyle = '#5a606a' // raised grouser plate
+    ctx.fillRect(i + 3, 0, 9, 32)
+    ctx.fillStyle = '#878d97' // top highlight
+    ctx.fillRect(i + 3, 0, 9, 5)
   }
   const tex = new THREE.CanvasTexture(c)
   tex.wrapS = tex.wrapT = THREE.RepeatWrapping
-  tex.repeat.set(6, 1)
-  return new THREE.MeshStandardMaterial({ map: tex, roughness: 0.8, metalness: 0.3 })
+  tex.repeat.set(9, 1)
+  return new THREE.MeshStandardMaterial({ map: tex, roughness: 0.75, metalness: 0.4 })
 }

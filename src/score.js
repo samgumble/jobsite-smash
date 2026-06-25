@@ -3,11 +3,16 @@
 export function createScore({ scoreEl, comboEl }) {
   const POINTS = { brick: 10, pallet: 15, barrel: 25, crate: 20, cone: 5 }
   const COMBO_WINDOW = 2.5 // seconds to keep a chain alive
-  const SMASH_SPEED = 3.0 // velocity that counts as "smashed"
+  const SMASH_SPEED = 4.0 // velocity that counts as "smashed"
 
   let score = 0
   let combo = 0
   let comboTimer = 0
+  let armed = false // ignore smashes until the scene settles after spawn
+
+  function arm() {
+    armed = true
+  }
 
   function multiplier() {
     return Math.min(1 + Math.floor(combo / 3), 8) // x1, then +1 every 3 hits, cap x8
@@ -24,11 +29,19 @@ export function createScore({ scoreEl, comboEl }) {
   }
 
   // Scan scorable pieces; award points for any newly knocked loose.
+  // A piece must first settle (rest) before it can score — so spawn jitter
+  // and pieces that roll off on their own never count.
   function detect(scorables) {
+    if (!armed) return
     for (const s of scorables) {
       if (s.scored) continue
       const v = s.body.linvel()
-      if (v.x * v.x + v.y * v.y + v.z * v.z > SMASH_SPEED * SMASH_SPEED) {
+      const sp2 = v.x * v.x + v.y * v.y + v.z * v.z
+      if (!s.settled) {
+        if (sp2 < 0.25) s.settled = true
+        continue
+      }
+      if (sp2 > SMASH_SPEED * SMASH_SPEED) {
         s.scored = true
         registerSmash(s.type)
       }
@@ -65,5 +78,5 @@ export function createScore({ scoreEl, comboEl }) {
   }
 
   renderScore()
-  return { detect, update, registerSmash, get score() { return score } }
+  return { detect, update, registerSmash, arm, get score() { return score } }
 }
