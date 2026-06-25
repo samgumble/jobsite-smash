@@ -5,6 +5,7 @@ import { createControls } from './controls.js'
 import { Vehicle } from './vehicles.js'
 import { CameraRig } from './camera.js'
 import { createDestructibles } from './destructibles.js'
+import { createWorld } from './world.js'
 
 // --- Renderer ---
 const canvas = document.querySelector('#game')
@@ -46,21 +47,6 @@ sun.shadow.camera.bottom = -60
 sun.shadow.bias = -0.0004
 scene.add(sun)
 
-// --- Ground plane ---
-const ground = new THREE.Mesh(
-  new THREE.PlaneGeometry(300, 300),
-  new THREE.MeshStandardMaterial({ color: 0xb8a98a, roughness: 1 })
-)
-ground.rotation.x = -Math.PI / 2
-ground.receiveShadow = true
-scene.add(ground)
-
-// Subtle grid so depth/scale reads clearly
-const grid = new THREE.GridHelper(300, 75, 0x8a7d63, 0x8a7d63)
-grid.material.opacity = 0.35
-grid.material.transparent = true
-scene.add(grid)
-
 // --- Resize ---
 window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight
@@ -75,17 +61,27 @@ const input = createControls()
 initPhysics().then((physics) => {
   physics.addGround(300)
 
-  // --- Destructible piles scattered around the jobsite (Phase 5) ---
+  // --- Static jobsite world: dirt ground, fence, containers, props ---
+  createWorld(scene, physics)
+
+  // --- Destructible piles scattered around the jobsite ---
   const destructibles = createDestructibles(scene, physics)
   if (import.meta.env.DEV) window.__dz = destructibles
   destructibles.spawnBrickWall({ x: 0, z: 18 }, { cols: 8, rows: 6 })
   destructibles.spawnBrickWall({ x: -26, z: 14 }, { cols: 6, rows: 5, yaw: Math.PI / 2 })
+  destructibles.spawnBrickWall({ x: 44, z: -22 }, { cols: 7, rows: 5, yaw: Math.PI / 2 })
   destructibles.spawnPalletStack({ x: 16, z: 18 }, { count: 6 })
   destructibles.spawnPalletStack({ x: 22, z: 26 }, { count: 5 })
+  destructibles.spawnPalletStack({ x: -38, z: -16 }, { count: 7 })
+  destructibles.spawnPalletStack({ x: 52, z: 30 }, { count: 5 })
   destructibles.spawnBarrelCluster({ x: -16, z: 30 }, { count: 7 })
   destructibles.spawnBarrelCluster({ x: 10, z: 38 }, { count: 6 })
+  destructibles.spawnBarrelCluster({ x: -50, z: 22 }, { count: 8 })
+  destructibles.spawnBarrelCluster({ x: 36, z: -34 }, { count: 6 })
   destructibles.spawnCrateStack({ x: 28, z: -6 }, { base: 4 })
   destructibles.spawnCrateStack({ x: -22, z: -10 }, { base: 3 })
+  destructibles.spawnCrateStack({ x: 8, z: -42 }, { base: 4 })
+  destructibles.spawnCrateStack({ x: -10, z: 52 }, { base: 3 })
 
   // --- Vehicle ---
   const vehicle = new Vehicle(scene, physics, 'bulldozer', { x: 0, y: 1.8, z: 0 })

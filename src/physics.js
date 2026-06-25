@@ -59,6 +59,31 @@ export async function initPhysics(gravity = { x: 0, y: -9.81 * 2.2, z: 0 }) {
     return body
   }
 
+  // Dynamic cone (traffic cones). Cone axis is Y, matching ConeGeometry.
+  function addCone(mesh, { halfHeight, radius }, position, options = {}) {
+    const bodyDesc = RAPIER.RigidBodyDesc.dynamic()
+      .setTranslation(position.x, position.y, position.z)
+      .setCanSleep(true)
+    const body = world.createRigidBody(bodyDesc)
+    const colliderDesc = RAPIER.ColliderDesc.cone(halfHeight, radius)
+      .setDensity(options.density ?? 1)
+      .setFriction(options.friction ?? 0.6)
+      .setRestitution(options.restitution ?? 0.1)
+    world.createCollider(colliderDesc, body)
+    dynamic.push({ mesh, body })
+    return body
+  }
+
+  // Fixed (static) cuboid obstacle — fence walls, containers, barriers.
+  // No mesh sync needed; the caller positions its mesh once.
+  function addFixedBox({ hx, hy, hz }, position, rotation = null) {
+    const bodyDesc = RAPIER.RigidBodyDesc.fixed().setTranslation(position.x, position.y, position.z)
+    if (rotation) bodyDesc.setRotation(rotation)
+    const body = world.createRigidBody(bodyDesc)
+    world.createCollider(RAPIER.ColliderDesc.cuboid(hx, hy, hz).setFriction(0.7), body)
+    return body
+  }
+
   // Remove a dynamic body + its mesh link (for debris despawn later).
   function remove(body) {
     const i = dynamic.findIndex((d) => d.body === body)
@@ -78,5 +103,17 @@ export async function initPhysics(gravity = { x: 0, y: -9.81 * 2.2, z: 0 }) {
     }
   }
 
-  return { RAPIER, world, addGround, addBox, addCylinder, remove, step, onBeforeStep, dynamic }
+  return {
+    RAPIER,
+    world,
+    addGround,
+    addBox,
+    addCylinder,
+    addCone,
+    addFixedBox,
+    remove,
+    step,
+    onBeforeStep,
+    dynamic,
+  }
 }
