@@ -35,13 +35,13 @@ function makeGroundTexture() {
   const c = document.createElement('canvas')
   c.width = c.height = 256
   const ctx = c.getContext('2d')
-  ctx.fillStyle = '#9c8a64'
+  ctx.fillStyle = '#6f5736'
   ctx.fillRect(0, 0, 256, 256)
   // soft blotches
   for (let i = 0; i < 240; i++) {
     const r = 4 + Math.random() * 26
-    const shade = 70 + Math.floor(Math.random() * 90)
-    ctx.fillStyle = `rgba(${shade},${shade - 14},${shade - 40},0.12)`
+    const shade = 50 + Math.floor(Math.random() * 70)
+    ctx.fillStyle = `rgba(${shade},${shade - 16},${shade - 38},0.14)`
     ctx.beginPath()
     ctx.arc(Math.random() * 256, Math.random() * 256, r, 0, Math.PI * 2)
     ctx.fill()
@@ -49,7 +49,7 @@ function makeGroundTexture() {
   // gravel speckle
   for (let i = 0; i < 5000; i++) {
     const v = Math.random()
-    ctx.fillStyle = v > 0.5 ? 'rgba(60,50,35,0.5)' : 'rgba(200,185,150,0.4)'
+    ctx.fillStyle = v > 0.5 ? 'rgba(40,30,18,0.5)' : 'rgba(150,128,92,0.35)'
     const s = Math.random() * 2 + 0.5
     ctx.fillRect(Math.random() * 256, Math.random() * 256, s, s)
   }

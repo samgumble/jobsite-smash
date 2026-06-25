@@ -334,7 +334,7 @@ export class Vehicle {
     this.root.quaternion.set(r.x, r.y, r.z, r.w)
 
     // Travel the grouser shoes around the loop at ground speed.
-    this.trackPhase -= this.controller.currentVehicleSpeed() / 60
+    this.trackPhase += this.controller.currentVehicleSpeed() / 60
     this._updateTracks()
   }
 
