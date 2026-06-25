@@ -109,8 +109,16 @@ initPhysics().then((physics) => {
   destructibles.spawnPortaPotty({ x: -34, z: 28, yaw: 0.5 })
 
   // --- Scoring: every destructible piece + every cone is scorable ---
-  const scorables = destructibles.items.map((i) => ({ body: i.body, type: i.type, scored: false }))
-  for (const body of world.cones) scorables.push({ body, type: 'cone', scored: false })
+  // Capture each piece's spawn transform now (before any physics step) so the
+  // reset button can restore the whole site.
+  const snapshot = (body, type) => {
+    const t = body.translation()
+    const r = body.rotation()
+    return { body, type, scored: false, settled: false, ip: { x: t.x, y: t.y, z: t.z }, ir: { x: r.x, y: r.y, z: r.z, w: r.w } }
+  }
+  const scorables = destructibles.items.map((i) => snapshot(i.body, i.type))
+  for (const body of world.cones) scorables.push(snapshot(body, 'cone'))
+
   const score = createScore({
     scoreEl: document.querySelector('#score'),
     comboEl: document.querySelector('#combo'),
@@ -130,6 +138,27 @@ initPhysics().then((physics) => {
     if (camIndicator) camIndicator.textContent = `CAM: ${mode === 'chase' ? 'CHASE' : 'TOP-DOWN'}`
   }
   cameraRig.update(0, vehicle, true) // snap into place on spawn
+
+  // --- Reset: restore the whole site, the vehicle, and the score ---
+  function resetGame() {
+    vehicle.reset({ x: 0, y: 2.3, z: 0 })
+    for (const s of scorables) {
+      s.body.setTranslation(s.ip, true)
+      s.body.setRotation(s.ir, true)
+      s.body.setLinvel({ x: 0, y: 0, z: 0 }, true)
+      s.body.setAngvel({ x: 0, y: 0, z: 0 }, true)
+      s.scored = false
+      s.settled = false
+    }
+    score.reset()
+    setTimeout(() => score.arm(), 1500)
+    cameraRig.update(0, vehicle, true)
+  }
+  const resetBtn = document.querySelector('#reset')
+  if (resetBtn) resetBtn.addEventListener('click', resetGame)
+  window.addEventListener('keydown', (e) => {
+    if (e.code === 'KeyR') resetGame()
+  })
 
   // --- Render loop ---
   let lastTime = performance.now()

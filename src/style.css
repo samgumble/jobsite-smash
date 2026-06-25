@@ -97,6 +97,30 @@ body {
   animation: combo-pop 0.22s ease;
 }
 
+#reset {
+  pointer-events: auto;
+  cursor: pointer;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 10px;
+  background: rgba(20, 20, 28, 0.5);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  font-family: inherit;
+  backdrop-filter: blur(2px);
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+#reset:hover {
+  background: rgba(255, 200, 60, 0.55);
+}
+
+#reset:active {
+  transform: scale(0.94);
+}
+
 @keyframes combo-pop {
   0% { transform: scale(1); }
   40% { transform: scale(1.22); }

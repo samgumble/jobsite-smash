@@ -14,6 +14,15 @@ export function createScore({ scoreEl, comboEl }) {
     armed = true
   }
 
+  function reset() {
+    score = 0
+    combo = 0
+    comboTimer = 0
+    armed = false
+    renderScore()
+    renderCombo()
+  }
+
   function multiplier() {
     return Math.min(1 + Math.floor(combo / 3), 8) // x1, then +1 every 3 hits, cap x8
   }
@@ -78,5 +87,5 @@ export function createScore({ scoreEl, comboEl }) {
   }
 
   renderScore()
-  return { detect, update, registerSmash, arm, get score() { return score } }
+  return { detect, update, registerSmash, arm, reset, get score() { return score } }
 }
