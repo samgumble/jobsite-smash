@@ -100,7 +100,7 @@ initPhysics().then((physics) => {
   })
 
   // --- Vehicle ---
-  const vehicle = new Vehicle(scene, physics, 'bulldozer', { x: 0, y: 1.8, z: 0 })
+  const vehicle = new Vehicle(scene, physics, 'bulldozer', { x: 0, y: 2.3, z: 0 })
   vehicle.setInput(input)
   if (import.meta.env.DEV) window.__vehicle = vehicle // dev tuning handle
 

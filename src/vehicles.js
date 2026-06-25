@@ -7,6 +7,7 @@ export const VEHICLE_CONFIGS = {
     name: 'Bulldozer',
     bodyColor: 0xfec810, // Caterpillar yellow
     accentColor: 0x23262b,
+    bodyScale: 1.25, // overall size multiplier
     chassis: { w: 2.6, h: 1.0, l: 4.2 },
     mass: 2200,
     linearDamping: 0.18,
@@ -52,6 +53,7 @@ export class Vehicle {
     const { RAPIER, world } = physics
     const cfg = this.config
     const c = cfg.chassis
+    const scale = cfg.bodyScale ?? 1
 
     // --- Chassis rigid body ---
     const bodyDesc = RAPIER.RigidBodyDesc.dynamic()
@@ -61,7 +63,7 @@ export class Vehicle {
       .setAngularDamping(cfg.angularDamping)
     this.body = world.createRigidBody(bodyDesc)
 
-    const colliderDesc = RAPIER.ColliderDesc.cuboid(c.w / 2, c.h / 2, c.l / 2)
+    const colliderDesc = RAPIER.ColliderDesc.cuboid((c.w / 2) * scale, (c.h / 2) * scale, (c.l / 2) * scale)
       .setMass(cfg.mass)
       .setFriction(0.5)
       .setRestitution(0.05)
@@ -69,6 +71,7 @@ export class Vehicle {
 
     // --- Visuals (block-out primitives) ---
     this.root = new THREE.Group()
+    this.root.scale.setScalar(scale)
     scene.add(this.root)
     this._buildVisuals()
 
@@ -80,22 +83,22 @@ export class Vehicle {
     const w = cfg.wheel
     // order: FL, FR, RL, RR  (front wheels steer)
     this.wheelInfo = [
-      { x: -w.offsetX, z: w.offsetZ, steered: true },
-      { x: w.offsetX, z: w.offsetZ, steered: true },
-      { x: -w.offsetX, z: -w.offsetZ, steered: false },
-      { x: w.offsetX, z: -w.offsetZ, steered: false },
+      { x: -w.offsetX * scale, z: w.offsetZ * scale, steered: true },
+      { x: w.offsetX * scale, z: w.offsetZ * scale, steered: true },
+      { x: -w.offsetX * scale, z: -w.offsetZ * scale, steered: false },
+      { x: w.offsetX * scale, z: -w.offsetZ * scale, steered: false },
     ]
 
     this.wheelMeshes = []
     this.wheelInfo.forEach((info) => {
-      const connection = { x: info.x, y: w.offsetY, z: info.z }
-      this.controller.addWheel(connection, DOWN, AXLE, cfg.suspension.restLength, w.radius)
+      const connection = { x: info.x, y: w.offsetY * scale, z: info.z }
+      this.controller.addWheel(connection, DOWN, AXLE, cfg.suspension.restLength * scale, w.radius * scale)
       const i = this.controller.numWheels() - 1
       const s = cfg.suspension
       this.controller.setWheelSuspensionStiffness(i, s.stiffness)
       this.controller.setWheelSuspensionCompression(i, s.compression)
       this.controller.setWheelSuspensionRelaxation(i, s.relaxation)
-      this.controller.setWheelMaxSuspensionTravel(i, s.maxTravel)
+      this.controller.setWheelMaxSuspensionTravel(i, s.maxTravel * scale)
       this.controller.setWheelMaxSuspensionForce(i, s.maxForce)
       this.controller.setWheelFrictionSlip(i, cfg.frictionSlip)
       this.controller.setWheelSideFrictionStiffness(i, cfg.sideFriction)
