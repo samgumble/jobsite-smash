@@ -9,10 +9,10 @@ export const VEHICLE_CONFIGS = {
     accentColor: 0x3a3a42,
     chassis: { w: 2.6, h: 1.0, l: 4.2 },
     mass: 2200,
-    linearDamping: 0.4,
+    linearDamping: 0.18,
     angularDamping: 0.6,
-    engineForce: 2600, // drive force per driven wheel
-    maxSpeed: 20, // m/s forward cap (~72 km/h); reverse uses reverseFactor
+    engineForce: 3400, // drive force per driven wheel
+    maxSpeed: 28, // m/s forward cap (~100 km/h); reverse uses reverseFactor
     reverseFactor: 0.5,
     brakeForce: 140,
     rollingBrake: 8, // gentle auto-brake when coasting
