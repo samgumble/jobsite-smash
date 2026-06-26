@@ -5,6 +5,7 @@ import * as THREE from 'three'
 // transforms are written into instance matrices each frame (skipping sleepers).
 export function createDestructibles(scene, physics) {
   const items = [] // { body, type } for scoring
+  const props = [] // non-instanced meshes (e.g. porta-potty groups)
 
   const box = (w, h, l) => new THREE.BoxGeometry(w, h, l)
   const cyl = (r, h) => new THREE.CylinderGeometry(r, r, h, 16)
@@ -128,6 +129,7 @@ export function createDestructibles(scene, physics) {
     g.traverse((m) => { m.castShadow = true; m.receiveShadow = true })
     g.rotation.y = yaw
     scene.add(g)
+    props.push(g)
     const body = physics.addBox(g, { hx: w / 2, hy: h / 2, hz: d / 2 }, { x: center.x, y: h / 2, z: center.z }, { density: 6 })
     body.setRotation(quatY(yaw), false)
     items.push({ body, type: 'crate' })
@@ -181,10 +183,17 @@ export function createDestructibles(scene, physics) {
     }
   }
 
+  function dispose() {
+    for (const k of Object.values(kinds)) if (k.mesh) scene.remove(k.mesh)
+    for (const g of props) scene.remove(g)
+    for (const it of items) physics.remove(it.body)
+  }
+
   return {
     items,
     finalize,
     sync,
+    dispose,
     spawnBrickWall,
     spawnCinderWall,
     spawnPalletStack,

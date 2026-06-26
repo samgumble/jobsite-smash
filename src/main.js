@@ -8,6 +8,7 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js'
 import { createDestructibles } from './destructibles.js'
 import { createWorld } from './world.js'
 import { createScore } from './score.js'
+import { LEVELS } from './levels.js'
 import { createParticles } from './particles.js'
 import { createAudio } from './audio.js'
 
@@ -71,56 +72,17 @@ const input = createControls()
 initPhysics().then((physics) => {
   physics.addGround(300)
 
-  // --- Static jobsite world: dirt ground, fence, containers, props ---
-  const world = createWorld(scene, physics)
+  // --- Level state (built by buildLevel below) ---
+  let world = null
+  let destructibles = null
+  let scorables = []
 
-  // --- Destructible piles scattered around the jobsite ---
-  const destructibles = createDestructibles(scene, physics)
-  if (import.meta.env.DEV) window.__dz = destructibles
-  // brick + cinder walls
-  destructibles.spawnBrickWall({ x: 0, z: 18 }, { cols: 8, rows: 6 })
-  destructibles.spawnBrickWall({ x: -26, z: 14 }, { cols: 6, rows: 5, yaw: Math.PI / 2 })
-  destructibles.spawnBrickWall({ x: 44, z: -22 }, { cols: 7, rows: 5, yaw: Math.PI / 2 })
-  destructibles.spawnCinderWall({ x: 22, z: 4 }, { cols: 6, rows: 4 })
-  destructibles.spawnCinderWall({ x: -44, z: -2 }, { cols: 5, rows: 4, yaw: Math.PI / 2 })
-  // pallets + lumber
-  destructibles.spawnPalletStack({ x: 16, z: 18 }, { count: 6 })
-  destructibles.spawnPalletStack({ x: 22, z: 26 }, { count: 5 })
-  destructibles.spawnPalletStack({ x: -38, z: -16 }, { count: 7 })
-  destructibles.spawnPalletStack({ x: 52, z: 30 }, { count: 5 })
-  destructibles.spawnPlankPile({ x: 6, z: 30 }, { count: 9 })
-  destructibles.spawnPlankPile({ x: -18, z: -28 }, { count: 8 })
-  destructibles.spawnPlankPile({ x: 40, z: 12 }, { count: 8 })
-  // barrels + pipes
-  destructibles.spawnBarrelCluster({ x: -16, z: 30 }, { count: 7 })
-  destructibles.spawnBarrelCluster({ x: 10, z: 38 }, { count: 6 })
-  destructibles.spawnBarrelCluster({ x: -50, z: 22 }, { count: 8 })
-  destructibles.spawnBarrelCluster({ x: 36, z: -34 }, { count: 6 })
-  destructibles.spawnPipeStack({ x: -32, z: 40 }, { rows: 3 })
-  destructibles.spawnPipeStack({ x: 30, z: 44 }, { rows: 4, yaw: Math.PI / 2 })
-  destructibles.spawnPipeStack({ x: 54, z: -8 }, { rows: 3 })
-  // crates
-  destructibles.spawnCrateStack({ x: 28, z: -6 }, { base: 4 })
-  destructibles.spawnCrateStack({ x: -22, z: -10 }, { base: 3 })
-  destructibles.spawnCrateStack({ x: 8, z: -42 }, { base: 4 })
-  destructibles.spawnCrateStack({ x: -10, z: 52 }, { base: 3 })
-  destructibles.spawnCrateStack({ x: 48, z: 48 }, { base: 3 })
-  // porta-potties
-  destructibles.spawnPortaPotty({ x: 12, z: -16 })
-  destructibles.spawnPortaPotty({ x: 14, z: -16, yaw: 0.2 })
-  destructibles.spawnPortaPotty({ x: -34, z: 28, yaw: 0.5 })
-  destructibles.finalize() // build instanced meshes from all spawned pieces
-
-  // --- Scoring: every destructible piece + every cone is scorable ---
-  // Capture each piece's spawn transform now (before any physics step) so the
-  // reset button can restore the whole site.
+  // Capture a piece's spawn transform so reset can restore it.
   const snapshot = (body, type) => {
     const t = body.translation()
     const r = body.rotation()
     return { body, type, scored: false, settled: false, ip: { x: t.x, y: t.y, z: t.z }, ir: { x: r.x, y: r.y, z: r.z, w: r.w } }
   }
-  const scorables = destructibles.items.map((i) => snapshot(i.body, i.type))
-  for (const body of world.cones) scorables.push(snapshot(body, 'cone'))
 
   // --- Juice: particles + procedural audio ---
   const particles = createParticles(scene)
@@ -137,8 +99,6 @@ initPhysics().then((physics) => {
       cameraRig.addShake(0.28)
     },
   })
-  // Let the piles settle before scoring counts (no points for spawn jitter).
-  setTimeout(() => score.arm(), 1500)
 
   // Start audio on the first user interaction (autoplay policy).
   const startAudio = () => audio.resume()
@@ -179,7 +139,44 @@ initPhysics().then((physics) => {
   }
   cameraRig.update(0, vehicle, true) // snap into place on spawn
 
-  // --- Reset: restore the whole site, the vehicle, and the score ---
+  // --- Levels: build / tear down / switch ---
+  let levelIndex = 0
+  const levelLabel = document.querySelector('#level-name')
+
+  function buildLevel(index) {
+    const def = LEVELS[index]
+    world = createWorld(scene, physics, def.layout)
+    destructibles = createDestructibles(scene, physics)
+    def.spawns(destructibles)
+    destructibles.finalize()
+    scorables = destructibles.items.map((i) => snapshot(i.body, i.type))
+    for (const body of world.cones) scorables.push(snapshot(body, 'cone'))
+    if (import.meta.env.DEV) window.__dz = destructibles
+    if (levelLabel) levelLabel.textContent = `LVL ${index + 1}: ${def.name}`
+    score.reset()
+    setTimeout(() => score.arm(), 1500)
+  }
+
+  function switchLevel(index) {
+    if (index === levelIndex || index < 0 || index >= LEVELS.length) return
+    world.dispose()
+    destructibles.dispose()
+    levelIndex = index
+    buildLevel(index)
+    vehicle.reset({ x: 0, y: 2.3, z: 0 })
+    cameraRig.update(0, vehicle, true)
+  }
+
+  window.addEventListener('keydown', (e) => {
+    if (e.code === 'Digit1') switchLevel(0)
+    else if (e.code === 'Digit2') switchLevel(1)
+    else if (e.code === 'Digit3') switchLevel(2)
+    else if (e.code === 'KeyL') switchLevel((levelIndex + 1) % LEVELS.length)
+  })
+
+  buildLevel(0) // initial level
+
+  // --- Reset: restore the current site, the vehicle, and the score ---
   function resetGame() {
     vehicle.reset({ x: 0, y: 2.3, z: 0 })
     for (const s of scorables) {

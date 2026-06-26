@@ -41,6 +41,14 @@ Score/combo for destruction. Portfolio piece.
 11. Build + deploy to Netlify/Vercel
 
 ## Current phase (latest)
+Levels: levels.js defines 3 (Open Jobsite, Demolition Yard, Container Yard).
+Switch with keys 1/2/3 (L cycles); HUD shows level name. world.js + destructibles
+now take a per-level layout and expose dispose() for teardown; main.js
+buildLevel/switchLevel rebuild world+destructibles+scorables and reset score.
+Ground collider is persistent; ground visual is per-level (color differs).
+Keep spawn area (origin) clear in every level.
+
+## Prior phase
 Phase 10 (perf) + Phase 7 (roster) done. Roster: bulldozer, excavator (tracked),
 dump truck, wheel loader (wheeled) — switch with V; HUD shows name. Vehicles
 share BASE physics; config has locomotion ('tracks'|'wheels'), build, frontTool.

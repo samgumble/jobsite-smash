@@ -65,6 +65,24 @@ body {
   pointer-events: none;
 }
 
+#level-name {
+  position: fixed;
+  top: 90px;
+  left: 14px;
+  z-index: 10;
+  padding: 5px 12px;
+  border-radius: 8px;
+  background: var(--panel);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  border-left: 3px solid var(--procore-orange);
+  backdrop-filter: blur(3px);
+  user-select: none;
+  pointer-events: none;
+}
+
 #hud {
   position: fixed;
   top: 14px;
