@@ -25,6 +25,35 @@
       <span><b>1-3</b>Level</span>
       <span><b>R</b>Reset</span>
     </div>
+
+    <div id="porta-power">⚡ PORTA POWER ⚡</div>
+
+    <div id="game-over">
+      <div class="go-card">
+        <svg viewBox="0 0 200 165" width="170" height="140" aria-hidden="true">
+          <g fill="#3f8b46">
+            <rect x="36" y="44" width="20" height="42" rx="10" transform="rotate(-22 46 65)" />
+            <rect x="144" y="44" width="20" height="42" rx="10" transform="rotate(22 154 65)" />
+            <rect x="58" y="34" width="18" height="40" rx="9" transform="rotate(-10 67 54)" />
+            <rect x="124" y="34" width="18" height="40" rx="9" transform="rotate(10 133 54)" />
+          </g>
+          <circle cx="100" cy="42" r="17" fill="#3f8b46" />
+          <g stroke="#16241a" stroke-width="2.6" stroke-linecap="round">
+            <line x1="92" y1="37" x2="98" y2="43" /><line x1="98" y1="37" x2="92" y2="43" />
+            <line x1="102" y1="37" x2="108" y2="43" /><line x1="108" y1="37" x2="102" y2="43" />
+          </g>
+          <ellipse cx="100" cy="100" rx="64" ry="48" fill="#ecdca9" stroke="#c7b67e" stroke-width="4" />
+          <g stroke="#c7b67e" stroke-width="3" fill="none">
+            <line x1="100" y1="56" x2="100" y2="144" />
+            <line x1="40" y1="100" x2="160" y2="100" />
+            <path d="M70 70 Q100 80 130 70" /><path d="M70 130 Q100 120 130 130" />
+          </g>
+        </svg>
+        <h1>GAME OVER</h1>
+        <p>You flipped — stuck like a turtle on its back!</p>
+        <button id="restart" type="button">↻ RESTART</button>
+      </div>
+    </div>
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>

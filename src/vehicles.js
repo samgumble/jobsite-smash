@@ -52,7 +52,10 @@ export class Vehicle {
     this.configKey = configKey
     this.config = VEHICLE_CONFIGS[configKey]
     this.steer = 0
+    this.boost = 1 // multiplier raised during Porta Power
     this._fwd = new THREE.Vector3()
+    this._up = new THREE.Vector3()
+    this._q = new THREE.Quaternion()
 
     const { RAPIER, world } = physics
     const cfg = this.config
@@ -408,16 +411,18 @@ export class Vehicle {
     const k = Math.min(1, cfg.steerSpeed * dt)
     this.steer += (targetSteer - this.steer) * k
 
-    // --- Throttle / brake ---
+    // --- Throttle / brake (boost multiplier applies during Porta Power) ---
     // currentVehicleSpeed is signed along the forward axis (+ = forward).
     const speed = this.controller.currentVehicleSpeed()
+    const force = cfg.engineForce * this.boost
+    const maxSpeed = cfg.maxSpeed * this.boost
     let engine = 0
-    if (input.forward) engine = cfg.engineForce
-    else if (input.backward) engine = -cfg.engineForce * cfg.reverseFactor
+    if (input.forward) engine = force
+    else if (input.backward) engine = -force * cfg.reverseFactor
 
     // Cap top speed: cut drive once we're at the limit in that direction.
-    if (engine > 0 && speed > cfg.maxSpeed) engine = 0
-    if (engine < 0 && speed < -cfg.maxSpeed * cfg.reverseFactor) engine = 0
+    if (engine > 0 && speed > maxSpeed) engine = 0
+    if (engine < 0 && speed < -maxSpeed * cfg.reverseFactor) engine = 0
 
     let brake = cfg.rollingBrake
     if (input.brake) brake = cfg.brakeForce
@@ -480,6 +485,13 @@ export class Vehicle {
 
   getPosition() {
     return this.body.translation()
+  }
+
+  // World-space Y of the vehicle's local up axis: ~1 upright, < 0 flipped.
+  getUpY() {
+    const r = this.body.rotation()
+    this._q.set(r.x, r.y, r.z, r.w)
+    return this._up.set(0, 1, 0).applyQuaternion(this._q).y
   }
 
   getSpeed() {

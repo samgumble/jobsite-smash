@@ -11,6 +11,7 @@ import { createScore } from './score.js'
 import { LEVELS } from './levels.js'
 import { createParticles } from './particles.js'
 import { createAudio } from './audio.js'
+import { createPortaPower } from './portaPower.js'
 
 // --- Renderer ---
 const canvas = document.querySelector('#game')
@@ -88,7 +89,7 @@ initPhysics().then((physics) => {
   const particles = createParticles(scene)
   const audio = createAudio()
   if (import.meta.env.DEV) window.__fx = particles
-  const DEBRIS_COLOR = { brick: 0xa8442a, barrel: 0xe0892e, crate: 0xc7a86a, pallet: 0xb07a3e, cone: 0xff6a1a }
+  const DEBRIS_COLOR = { brick: 0xa8442a, barrel: 0xe0892e, crate: 0xc7a86a, pallet: 0xb07a3e, cone: 0xff6a1a, porta: 0x2f8f5b }
 
   const score = createScore({
     scoreEl: document.querySelector('#score'),
@@ -97,6 +98,7 @@ initPhysics().then((physics) => {
       particles.burst(pos, DEBRIS_COLOR[type] ?? 0xc7a86a)
       audio.thud(0.45 + Math.random() * 0.4)
       cameraRig.addShake(0.28)
+      if (type === 'porta') portaPower.activate() // ⚡ Porta Power!
     },
   })
 
@@ -138,6 +140,34 @@ initPhysics().then((physics) => {
     if (camIndicator) camIndicator.textContent = `CAM: ${mode === 'chase' ? 'CHASE' : 'TOP-DOWN'}`
   }
   cameraRig.update(0, vehicle, true) // snap into place on spawn
+
+  // --- Porta Power (star-style power-up) ---
+  const portaPower = createPortaPower({
+    scene,
+    getVehicle: () => vehicle,
+    bannerEl: document.querySelector('#porta-power'),
+    onStart: () => audio.powerup(),
+  })
+  if (import.meta.env.DEV) window.__pp = portaPower
+
+  // --- Game over (flip a vehicle = turtle on its back) ---
+  const gameOverEl = document.querySelector('#game-over')
+  let flipTimer = 0
+  let gameOver = false
+  function checkFlip(dt) {
+    if (gameOver) return
+    // Upright up.y ~ 1; flipped < 0. Invincible during Porta Power.
+    if (!portaPower.active && vehicle.getUpY() < -0.4) {
+      flipTimer += dt
+      if (flipTimer > 1.6) {
+        gameOver = true
+        if (gameOverEl) gameOverEl.classList.add('show')
+      }
+    } else {
+      flipTimer = 0
+    }
+  }
+  if (import.meta.env.DEV) window.__flip = () => ({ flipTimer, gameOver, up: +vehicle.getUpY().toFixed(2), ppa: portaPower.active })
 
   // --- Levels: build / tear down / switch ---
   let levelIndex = 0
@@ -190,9 +220,16 @@ initPhysics().then((physics) => {
     score.reset()
     setTimeout(() => score.arm(), 1500)
     cameraRig.update(0, vehicle, true)
+    // clear power-up + game-over state
+    portaPower.reset()
+    flipTimer = 0
+    gameOver = false
+    if (gameOverEl) gameOverEl.classList.remove('show')
   }
   const resetBtn = document.querySelector('#reset')
   if (resetBtn) resetBtn.addEventListener('click', resetGame)
+  const restartBtn = document.querySelector('#restart')
+  if (restartBtn) restartBtn.addEventListener('click', resetGame)
   window.addEventListener('keydown', (e) => {
     if (e.code === 'KeyR') resetGame()
   })
@@ -219,6 +256,8 @@ initPhysics().then((physics) => {
     destructibles.sync() // push awake bodies into instance matrices
     score.detect(scorables)
     score.update(delta)
+    portaPower.update(delta)
+    checkFlip(delta)
 
     // Engine sound tracks speed + throttle.
     const speed = vehicle.getSpeed()

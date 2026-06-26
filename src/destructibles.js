@@ -132,7 +132,7 @@ export function createDestructibles(scene, physics) {
     props.push(g)
     const body = physics.addBox(g, { hx: w / 2, hy: h / 2, hz: d / 2 }, { x: center.x, y: h / 2, z: center.z }, { density: 6 })
     body.setRotation(quatY(yaw), false)
-    items.push({ body, type: 'crate' })
+    items.push({ body, type: 'porta' })
   }
 
   function mesh(geo, color) {

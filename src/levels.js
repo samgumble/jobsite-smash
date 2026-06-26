@@ -11,6 +11,10 @@ export const LEVELS = [
       fenceHalf: 72,
       coneCount: 30, // lane-closure cones everywhere
       roads: [{ x: 0, z: 0, w: 11, l: 140, rot: 0 }],
+      grass: [
+        { x: -50, z: 0, w: 38, d: 144 },
+        { x: 50, z: 0, w: 38, d: 144 },
+      ],
       // jersey barriers flanking both edges of the alignment
       barriers: [
         { x: 7.5, z: -30, ry: P2, n: 10 },
@@ -51,6 +55,11 @@ export const LEVELS = [
       groundColor: '#6f5736',
       fenceHalf: 70,
       coneCount: 14,
+      roads: [{ x: 0, z: -8, w: 8, l: 60, rot: 0 }], // site haul road
+      grass: [
+        { x: -50, z: -45, w: 30, d: 36 },
+        { x: 52, z: 45, w: 28, d: 36 },
+      ],
       // a mid-rise frame going up, plus a small annex, served by a tower crane
       buildings: [
         { x: 0, z: 40, w: 18, d: 16, floors: 4, color: 0x9a9a93 },
@@ -92,6 +101,15 @@ export const LEVELS = [
       groundColor: '#7c6c4a', // lighter, dusty
       fenceHalf: 72,
       coneCount: 18,
+      roads: [
+        { x: 0, z: 4, w: 10, l: 70, rot: 0 }, // main drive to the tower entrance
+        { x: 0, z: -28, w: 9, l: 60, rot: P2 }, // cross drive
+      ],
+      grass: [
+        { x: -46, z: 44, w: 34, d: 34 }, // campus lawns
+        { x: 46, z: 44, w: 34, d: 34 },
+        { x: -52, z: -10, w: 24, d: 28 },
+      ],
       // the new tower + two lower wings
       buildings: [
         { x: 0, z: 44, w: 20, d: 16, floors: 6, color: 0xcfd2d6 }, // New Tower

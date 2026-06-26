@@ -15,6 +15,7 @@ export function createWorld(scene, physics, layout = {}) {
   }
 
   buildGround(ctx, layout.groundColor ?? '#6f5736')
+  for (const g of layout.grass ?? []) buildGrass(ctx, g)
   for (const r of layout.roads ?? []) buildRoad(ctx, r)
   buildFence(ctx, HALF)
   buildContainers(ctx, layout.containers ?? [])
@@ -299,6 +300,45 @@ function buildCrane(ctx, c) {
   const hook = new THREE.Mesh(new THREE.BoxGeometry(0.2, 2.2, 0.2), dark)
   hook.position.set(x + cos * (jib - 3), topY - 0.5, z + sin * (jib - 3))
   ctx.addMesh(hook)
+}
+
+// --- Grass area (visual only, sits just above the dirt) ---
+function buildGrass(ctx, g) {
+  const { x = 0, z = 0, w = 20, d = 20, rot = 0 } = g
+  const tex = makeGrassTexture()
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping
+  tex.repeat.set(Math.max(2, w / 6), Math.max(2, d / 6))
+  const grass = new THREE.Mesh(
+    new THREE.PlaneGeometry(w, d),
+    new THREE.MeshStandardMaterial({ map: tex, roughness: 1 })
+  )
+  grass.rotation.x = -Math.PI / 2
+  grass.rotation.z = rot
+  grass.position.set(x, 0.015, z)
+  grass.receiveShadow = true
+  ctx.addMesh(grass)
+}
+
+function makeGrassTexture() {
+  const c = document.createElement('canvas')
+  c.width = c.height = 128
+  const x = c.getContext('2d')
+  x.fillStyle = '#5a7d3a'
+  x.fillRect(0, 0, 128, 128)
+  // mottled patches
+  for (let i = 0; i < 120; i++) {
+    const g = 90 + Math.floor(Math.random() * 70)
+    x.fillStyle = `rgba(${g - 40},${g},${g - 55},0.18)`
+    x.beginPath()
+    x.arc(Math.random() * 128, Math.random() * 128, 3 + Math.random() * 12, 0, Math.PI * 2)
+    x.fill()
+  }
+  // blade speckle
+  for (let i = 0; i < 2600; i++) {
+    x.fillStyle = Math.random() > 0.5 ? 'rgba(40,70,30,0.5)' : 'rgba(140,175,90,0.45)'
+    x.fillRect(Math.random() * 128, Math.random() * 128, 1, 2)
+  }
+  return new THREE.CanvasTexture(c)
 }
 
 // --- Asphalt roadway with dashed center line (visual only) ---

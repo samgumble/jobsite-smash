@@ -96,5 +96,26 @@ export function createAudio() {
     src.stop(t + 0.4)
   }
 
-  return { resume, setEngine, thud }
+  // Rising arpeggio for the Porta Power pickup.
+  function powerup() {
+    if (!started) return
+    const t0 = ctx.currentTime
+    const notes = [392, 523, 659, 784, 1047] // G C E G C
+    notes.forEach((f, i) => {
+      const t = t0 + i * 0.09
+      const osc = ctx.createOscillator()
+      osc.type = 'square'
+      osc.frequency.value = f
+      const g = ctx.createGain()
+      g.gain.setValueAtTime(0.0001, t)
+      g.gain.exponentialRampToValueAtTime(0.18, t + 0.02)
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.16)
+      osc.connect(g)
+      g.connect(master)
+      osc.start(t)
+      osc.stop(t + 0.18)
+    })
+  }
+
+  return { resume, setEngine, thud, powerup }
 }
