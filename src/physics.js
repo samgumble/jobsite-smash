@@ -13,6 +13,10 @@ export async function initPhysics(gravity = { x: 0, y: -9.81 * 2.2, z: 0 }) {
   const beforeStep = []
   function onBeforeStep(fn) {
     beforeStep.push(fn)
+    return () => {
+      const i = beforeStep.indexOf(fn)
+      if (i !== -1) beforeStep.splice(i, 1)
+    }
   }
 
   function addGround(size = 200) {

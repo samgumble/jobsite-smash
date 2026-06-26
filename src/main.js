@@ -2,7 +2,7 @@ import './style.css'
 import * as THREE from 'three'
 import { initPhysics } from './physics.js'
 import { createControls } from './controls.js'
-import { Vehicle } from './vehicles.js'
+import { Vehicle, VEHICLE_CONFIGS, VEHICLE_ORDER } from './vehicles.js'
 import { CameraRig } from './camera.js'
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js'
 import { createDestructibles } from './destructibles.js'
@@ -145,10 +145,31 @@ initPhysics().then((physics) => {
   window.addEventListener('keydown', startAudio, { once: true })
   window.addEventListener('pointerdown', startAudio, { once: true })
 
-  // --- Vehicle ---
-  const vehicle = new Vehicle(scene, physics, 'bulldozer', { x: 0, y: 2.3, z: 0 })
+  // --- Vehicle (switchable roster) ---
+  let vehicleIndex = 0
+  let vehicle = new Vehicle(scene, physics, VEHICLE_ORDER[0], { x: 0, y: 2.3, z: 0 })
   vehicle.setInput(input)
   if (import.meta.env.DEV) window.__vehicle = vehicle // dev tuning handle
+
+  const vehicleLabel = document.querySelector('#vehicle-name')
+  if (vehicleLabel) vehicleLabel.textContent = vehicle.config.name
+
+  function switchVehicle(dir = 1) {
+    const pos = vehicle.getPosition()
+    const f = vehicle.getForwardDirection()
+    const yaw = Math.atan2(f.x, f.z)
+    vehicle.destroy()
+    vehicleIndex = (vehicleIndex + dir + VEHICLE_ORDER.length) % VEHICLE_ORDER.length
+    vehicle = new Vehicle(scene, physics, VEHICLE_ORDER[vehicleIndex], { x: pos.x, y: pos.y + 0.6, z: pos.z })
+    vehicle.body.setRotation({ x: 0, y: Math.sin(yaw / 2), z: 0, w: Math.cos(yaw / 2) }, true)
+    vehicle.setInput(input)
+    if (import.meta.env.DEV) window.__vehicle = vehicle
+    if (vehicleLabel) vehicleLabel.textContent = vehicle.config.name
+    cameraRig.update(0, vehicle, true)
+  }
+  window.addEventListener('keydown', (e) => {
+    if (e.code === 'KeyV') switchVehicle(1)
+  })
 
   // --- Camera rig (chase / top-down, toggle with C) ---
   const cameraRig = new CameraRig(camera)

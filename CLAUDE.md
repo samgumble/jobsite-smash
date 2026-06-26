@@ -41,6 +41,16 @@ Score/combo for destruction. Portfolio piece.
 11. Build + deploy to Netlify/Vercel
 
 ## Current phase (latest)
+Phase 10 (perf) + Phase 7 (roster) done. Roster: bulldozer, excavator (tracked),
+dump truck, wheel loader (wheeled) — switch with V; HUD shows name. Vehicles
+share BASE physics; config has locomotion ('tracks'|'wheels'), build, frontTool.
+Wheeled vehicles show real wheels (unscaled pivots; root scaled by bodyScale).
+Vehicle.destroy() + physics.onBeforeStep returns unsubscribe for clean swaps.
+Perf: destructibles are InstancedMesh per kind (~7 draw calls), sync skips
+sleeping bodies; pipes damped; score settle-gate needs sustained stillness.
+Remaining: Phase 11 (build + deploy).
+
+## Prior phase (latest)
 Phase 9 juice done: particles.js (pooled GPU points: driving dust + debris
 bursts), audio.js (procedural Web Audio diesel engine + impact thuds, starts on
 first gesture), camera shake on impact (CameraRig.addShake), score.onSmash wires
