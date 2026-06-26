@@ -47,7 +47,13 @@ export function createScore({ scoreEl, comboEl, onSmash }) {
       const v = s.body.linvel()
       const sp2 = v.x * v.x + v.y * v.y + v.z * v.z
       if (!s.settled) {
-        if (sp2 < 0.25) s.settled = true
+        // Require sustained stillness so a briefly-slow roller isn't "settled".
+        if (sp2 < 0.2) {
+          s.calm = (s.calm | 0) + 1
+          if (s.calm > 30) s.settled = true
+        } else {
+          s.calm = 0
+        }
         continue
       }
       if (sp2 > SMASH_SPEED * SMASH_SPEED) {

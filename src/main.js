@@ -109,6 +109,7 @@ initPhysics().then((physics) => {
   destructibles.spawnPortaPotty({ x: 12, z: -16 })
   destructibles.spawnPortaPotty({ x: 14, z: -16, yaw: 0.2 })
   destructibles.spawnPortaPotty({ x: -34, z: 28, yaw: 0.5 })
+  destructibles.finalize() // build instanced meshes from all spawned pieces
 
   // --- Scoring: every destructible piece + every cone is scorable ---
   // Capture each piece's spawn transform now (before any physics step) so the
@@ -197,6 +198,7 @@ initPhysics().then((physics) => {
       accumulator -= fixedStep
     }
 
+    destructibles.sync() // push awake bodies into instance matrices
     score.detect(scorables)
     score.update(delta)
 

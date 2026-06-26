@@ -24,52 +24,66 @@ export async function initPhysics(gravity = { x: 0, y: -9.81 * 2.2, z: 0 }) {
     return body
   }
 
-  // Spawn a dynamic cuboid that drives a Three mesh.
-  // half = { hx, hy, hz } half-extents matching the mesh geometry.
-  function addBox(mesh, { hx, hy, hz }, position, options = {}) {
-    const bodyDesc = RAPIER.RigidBodyDesc.dynamic()
-      .setTranslation(position.x, position.y, position.z)
-      .setCanSleep(true)
-    const body = world.createRigidBody(bodyDesc)
+  function newDynamicBody(position) {
+    return world.createRigidBody(
+      RAPIER.RigidBodyDesc.dynamic()
+        .setTranslation(position.x, position.y, position.z)
+        .setCanSleep(true)
+    )
+  }
 
-    const colliderDesc = RAPIER.ColliderDesc.cuboid(hx, hy, hz)
-      .setDensity(options.density ?? 1)
-      .setFriction(options.friction ?? 0.6)
-      .setRestitution(options.restitution ?? 0.1)
-    world.createCollider(colliderDesc, body)
+  // --- Body-only creators (no mesh sync; for instanced rendering) ---
+  function addBoxBody({ hx, hy, hz }, position, options = {}) {
+    const body = newDynamicBody(position)
+    world.createCollider(
+      RAPIER.ColliderDesc.cuboid(hx, hy, hz)
+        .setDensity(options.density ?? 1)
+        .setFriction(options.friction ?? 0.6)
+        .setRestitution(options.restitution ?? 0.1),
+      body
+    )
+    return body
+  }
 
+  function addCylinderBody({ halfHeight, radius }, position, options = {}) {
+    const body = newDynamicBody(position)
+    world.createCollider(
+      RAPIER.ColliderDesc.cylinder(halfHeight, radius)
+        .setDensity(options.density ?? 1)
+        .setFriction(options.friction ?? 0.5)
+        .setRestitution(options.restitution ?? 0.1),
+      body
+    )
+    return body
+  }
+
+  function addConeBody({ halfHeight, radius }, position, options = {}) {
+    const body = newDynamicBody(position)
+    world.createCollider(
+      RAPIER.ColliderDesc.cone(halfHeight, radius)
+        .setDensity(options.density ?? 1)
+        .setFriction(options.friction ?? 0.6)
+        .setRestitution(options.restitution ?? 0.1),
+      body
+    )
+    return body
+  }
+
+  // --- Mesh-synced variants (one Three mesh per body) ---
+  function addBox(mesh, half, position, options = {}) {
+    const body = addBoxBody(half, position, options)
     dynamic.push({ mesh, body })
     return body
   }
 
-  // Dynamic cylinder (barrels). Cylinder axis is Y, matching CylinderGeometry.
-  function addCylinder(mesh, { halfHeight, radius }, position, options = {}) {
-    const bodyDesc = RAPIER.RigidBodyDesc.dynamic()
-      .setTranslation(position.x, position.y, position.z)
-      .setCanSleep(true)
-    const body = world.createRigidBody(bodyDesc)
-
-    const colliderDesc = RAPIER.ColliderDesc.cylinder(halfHeight, radius)
-      .setDensity(options.density ?? 1)
-      .setFriction(options.friction ?? 0.5)
-      .setRestitution(options.restitution ?? 0.1)
-    world.createCollider(colliderDesc, body)
-
+  function addCylinder(mesh, dims, position, options = {}) {
+    const body = addCylinderBody(dims, position, options)
     dynamic.push({ mesh, body })
     return body
   }
 
-  // Dynamic cone (traffic cones). Cone axis is Y, matching ConeGeometry.
-  function addCone(mesh, { halfHeight, radius }, position, options = {}) {
-    const bodyDesc = RAPIER.RigidBodyDesc.dynamic()
-      .setTranslation(position.x, position.y, position.z)
-      .setCanSleep(true)
-    const body = world.createRigidBody(bodyDesc)
-    const colliderDesc = RAPIER.ColliderDesc.cone(halfHeight, radius)
-      .setDensity(options.density ?? 1)
-      .setFriction(options.friction ?? 0.6)
-      .setRestitution(options.restitution ?? 0.1)
-    world.createCollider(colliderDesc, body)
+  function addCone(mesh, dims, position, options = {}) {
+    const body = addConeBody(dims, position, options)
     dynamic.push({ mesh, body })
     return body
   }
@@ -110,6 +124,9 @@ export async function initPhysics(gravity = { x: 0, y: -9.81 * 2.2, z: 0 }) {
     addBox,
     addCylinder,
     addCone,
+    addBoxBody,
+    addCylinderBody,
+    addConeBody,
     addFixedBox,
     remove,
     step,
