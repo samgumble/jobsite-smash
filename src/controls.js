@@ -53,7 +53,7 @@ function buildTouchUI(state) {
       border-radius: 50%; background: rgba(20,20,28,0.38); color: #fff;
       border: 2px solid rgba(255,255,255,0.35); font-size: 30px; font-weight: 700;
       backdrop-filter: blur(2px); touch-action: none; }
-    .touch-btn:active { background: rgba(255,200,60,0.6); }
+    .touch-btn:active { background: rgba(255,82,0,0.75); border-color: #ff5200; }
     .tb-up    { left: 96px; bottom: 150px; }
     .tb-down  { left: 96px; bottom: 56px; }
     .tb-left  { left: 24px; bottom: 103px; }

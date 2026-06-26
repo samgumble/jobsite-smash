@@ -1,3 +1,13 @@
+:root {
+  /* Procore-inspired branding */
+  --procore-orange: #ff5200;
+  --procore-orange-dark: #d94600;
+  --panel: rgba(28, 31, 36, 0.82); /* dark charcoal */
+  --panel-solid: #1c1f24;
+  --text: #ffffff;
+  --text-dim: rgba(255, 255, 255, 0.8);
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -27,12 +37,13 @@ body {
   z-index: 10;
   padding: 6px 12px;
   border-radius: 8px;
-  background: rgba(20, 20, 28, 0.45);
-  color: #fff;
+  background: var(--panel);
+  color: var(--text);
   font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.05em;
-  backdrop-filter: blur(2px);
+  border-left: 3px solid var(--procore-orange);
+  backdrop-filter: blur(3px);
   user-select: none;
   pointer-events: none;
 }
@@ -44,11 +55,12 @@ body {
   z-index: 10;
   padding: 5px 12px;
   border-radius: 8px;
-  background: rgba(255, 200, 60, 0.85);
-  color: #1a1a1a;
+  background: var(--procore-orange);
+  color: #fff;
   font-size: 13px;
   font-weight: 800;
   letter-spacing: 0.04em;
+  box-shadow: 0 2px 8px rgba(255, 82, 0, 0.4);
   user-select: none;
   pointer-events: none;
 }
@@ -69,18 +81,18 @@ body {
 #score-box {
   padding: 8px 16px;
   border-radius: 10px;
-  background: rgba(20, 20, 28, 0.5);
-  backdrop-filter: blur(2px);
+  background: var(--panel);
+  border-top: 3px solid var(--procore-orange);
+  backdrop-filter: blur(3px);
   text-align: right;
-  color: #fff;
+  color: var(--text);
 }
 
 #score-label {
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.18em;
-  color: #ffd36a;
-  opacity: 0.85;
+  color: var(--procore-orange);
 }
 
 #score {
@@ -93,12 +105,12 @@ body {
 #combo {
   padding: 6px 14px;
   border-radius: 999px;
-  background: linear-gradient(135deg, #ff8a1a, #ff4d3d);
+  background: linear-gradient(135deg, var(--procore-orange), var(--procore-orange-dark));
   color: #fff;
   font-size: 18px;
   font-weight: 800;
   letter-spacing: 0.04em;
-  box-shadow: 0 4px 14px rgba(255, 90, 40, 0.5);
+  box-shadow: 0 4px 14px rgba(255, 82, 0, 0.5);
   opacity: 0;
   transform: scale(0.6);
   transition: opacity 0.18s ease, transform 0.18s ease;
@@ -119,18 +131,18 @@ body {
   padding: 8px 16px;
   border: none;
   border-radius: 10px;
-  background: rgba(20, 20, 28, 0.5);
+  background: var(--procore-orange);
   color: #fff;
   font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.08em;
   font-family: inherit;
-  backdrop-filter: blur(2px);
+  box-shadow: 0 2px 8px rgba(255, 82, 0, 0.4);
   transition: background 0.15s ease, transform 0.1s ease;
 }
 
 #reset:hover {
-  background: rgba(255, 200, 60, 0.55);
+  background: var(--procore-orange-dark);
 }
 
 #reset:active {
@@ -141,4 +153,43 @@ body {
   0% { transform: scale(1); }
   40% { transform: scale(1.22); }
   100% { transform: scale(1); }
+}
+
+/* On-screen controls legend (desktop / keyboard) */
+#controls {
+  position: fixed;
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  display: flex;
+  gap: 14px;
+  padding: 8px 16px;
+  border-radius: 10px;
+  background: var(--panel);
+  backdrop-filter: blur(3px);
+  color: var(--text-dim);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  user-select: none;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+#controls b {
+  display: inline-block;
+  min-width: 16px;
+  margin-right: 4px;
+  padding: 1px 6px;
+  border-radius: 5px;
+  background: var(--procore-orange);
+  color: #fff;
+  font-weight: 800;
+  text-align: center;
+}
+
+/* Hide the keyboard legend on touch devices (they get on-screen buttons) */
+@media (pointer: coarse) {
+  #controls { display: none; }
 }
