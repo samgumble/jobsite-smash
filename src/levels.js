@@ -7,7 +7,7 @@ export const LEVELS = [
   {
     name: 'Roadway Project',
     layout: {
-      groundColor: '#6f5736',
+      groundColor: '#3c2c17',
       fenceHalf: 72,
       coneCount: 30, // lane-closure cones everywhere
       roads: [{ x: 0, z: 0, w: 11, l: 140, rot: 0 }],
@@ -52,7 +52,7 @@ export const LEVELS = [
   {
     name: 'Building Jobsite',
     layout: {
-      groundColor: '#6f5736',
+      groundColor: '#3c2c17',
       fenceHalf: 70,
       coneCount: 14,
       roads: [{ x: 0, z: -8, w: 8, l: 60, rot: 0 }], // site haul road
@@ -98,7 +98,7 @@ export const LEVELS = [
   {
     name: 'Hospital Campus',
     layout: {
-      groundColor: '#7c6c4a', // lighter, dusty
+      groundColor: '#4a3a22', // dusty, a touch lighter than the others
       fenceHalf: 72,
       coneCount: 18,
       roads: [
@@ -154,7 +154,7 @@ export const LEVELS = [
   {
     name: 'Jobsite Grand Prix',
     layout: {
-      groundColor: '#6f5736',
+      groundColor: '#3c2c17',
       fenceHalf: 72,
       coneCount: 0, // keep the track clear
       track: { cx: 0, cz: 0, rx: 50, rz: 38, width: 14, segments: 40 },

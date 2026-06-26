@@ -61,18 +61,21 @@ function makeGroundTexture(baseColor) {
   x.fillRect(0, 0, 256, 256)
   for (let i = 0; i < 240; i++) {
     const r = 4 + Math.random() * 26
-    const shade = 50 + Math.floor(Math.random() * 70)
-    x.fillStyle = `rgba(${shade},${shade - 16},${shade - 38},0.14)`
+    const shade = 30 + Math.floor(Math.random() * 45)
+    x.fillStyle = `rgba(${shade},${shade - 12},${shade - 26},0.12)`
     x.beginPath()
     x.arc(Math.random() * 256, Math.random() * 256, r, 0, Math.PI * 2)
     x.fill()
   }
   for (let i = 0; i < 5000; i++) {
-    x.fillStyle = Math.random() > 0.5 ? 'rgba(40,30,18,0.5)' : 'rgba(150,128,92,0.35)'
+    // mostly dark grit; sparse, muted highlights so the dirt stays dark
+    x.fillStyle = Math.random() > 0.25 ? 'rgba(22,15,8,0.45)' : 'rgba(92,74,48,0.25)'
     const s = Math.random() * 2 + 0.5
     x.fillRect(Math.random() * 256, Math.random() * 256, s, s)
   }
-  return new THREE.CanvasTexture(c)
+  const t = new THREE.CanvasTexture(c)
+  t.colorSpace = THREE.SRGBColorSpace // interpret authored colors correctly
+  return t
 }
 
 // --- Perimeter chain-link fence ---
@@ -392,22 +395,24 @@ function makeGrassTexture() {
   const c = document.createElement('canvas')
   c.width = c.height = 128
   const x = c.getContext('2d')
-  x.fillStyle = '#5a7d3a'
+  x.fillStyle = '#2f7d1f'
   x.fillRect(0, 0, 128, 128)
   // mottled patches
   for (let i = 0; i < 120; i++) {
-    const g = 90 + Math.floor(Math.random() * 70)
-    x.fillStyle = `rgba(${g - 40},${g},${g - 55},0.18)`
+    const g = 110 + Math.floor(Math.random() * 80)
+    x.fillStyle = `rgba(${g - 60},${g},${g - 70},0.2)`
     x.beginPath()
     x.arc(Math.random() * 128, Math.random() * 128, 3 + Math.random() * 12, 0, Math.PI * 2)
     x.fill()
   }
   // blade speckle
   for (let i = 0; i < 2600; i++) {
-    x.fillStyle = Math.random() > 0.5 ? 'rgba(40,70,30,0.5)' : 'rgba(140,175,90,0.45)'
+    x.fillStyle = Math.random() > 0.5 ? 'rgba(24,72,18,0.5)' : 'rgba(120,195,70,0.5)'
     x.fillRect(Math.random() * 128, Math.random() * 128, 1, 2)
   }
-  return new THREE.CanvasTexture(c)
+  const t = new THREE.CanvasTexture(c)
+  t.colorSpace = THREE.SRGBColorSpace
+  return t
 }
 
 // --- Asphalt roadway with dashed center line (visual only) ---
