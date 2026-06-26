@@ -212,6 +212,99 @@ body {
   #controls { display: none; }
 }
 
+/* ===== Race HUD (lap + position) ===== */
+#race-hud {
+  position: fixed;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 12;
+  display: none;
+  gap: 10px;
+  user-select: none;
+  pointer-events: none;
+}
+
+#race-hud.show { display: flex; }
+
+#race-lap,
+#race-pos {
+  padding: 8px 16px;
+  border-radius: 10px;
+  background: var(--panel);
+  backdrop-filter: blur(3px);
+  color: #fff;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+#race-pos {
+  color: var(--procore-orange);
+  border-bottom: 3px solid var(--procore-orange);
+}
+
+/* ===== Countdown ===== */
+#countdown {
+  position: fixed;
+  top: 42%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 22;
+  font-size: 120px;
+  font-weight: 900;
+  color: #fff;
+  text-shadow: 0 0 30px var(--procore-orange), 0 6px 14px rgba(0, 0, 0, 0.6);
+  opacity: 0;
+  pointer-events: none;
+  user-select: none;
+}
+
+#countdown.show {
+  opacity: 1;
+  animation: count-pop 0.5s ease;
+}
+
+@keyframes count-pop {
+  0% { transform: translate(-50%, -50%) scale(0.4); opacity: 0; }
+  40% { transform: translate(-50%, -50%) scale(1.1); opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+}
+
+/* ===== Race results (reuses .go-card) ===== */
+#race-results {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(12, 14, 18, 0.72);
+  backdrop-filter: blur(3px);
+}
+
+#race-results.show { display: flex; animation: go-fade 0.25s ease; }
+
+.trophy { font-size: 60px; margin-bottom: 4px; }
+
+#race-restart {
+  cursor: pointer;
+  padding: 12px 28px;
+  border: none;
+  border-radius: 10px;
+  background: var(--procore-orange);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  font-family: inherit;
+  box-shadow: 0 2px 10px rgba(255, 82, 0, 0.4);
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+#race-restart:hover { background: var(--procore-orange-dark); }
+#race-restart:active { transform: scale(0.95); }
+
 /* ===== Mute toggle (bottom-right) ===== */
 #mute {
   position: fixed;

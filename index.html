@@ -22,11 +22,25 @@
       <span><b>WASD</b>Drive</span>
       <span><b>C</b>Camera</span>
       <span><b>V</b>Vehicle</span>
-      <span><b>1-3</b>Level</span>
+      <span><b>1-4</b>Level</span>
       <span><b>R</b>Reset</span>
       <span><b>M</b>Mute</span>
     </div>
     <button id="mute" type="button" aria-label="Toggle sound">🔊</button>
+
+    <div id="race-hud">
+      <div id="race-lap">LAP 1/3</div>
+      <div id="race-pos">1st / 4</div>
+    </div>
+    <div id="countdown"></div>
+    <div id="race-results">
+      <div class="go-card">
+        <div class="trophy">🏁</div>
+        <h1>FINISH!</h1>
+        <p id="race-results-text">You placed 1st!</p>
+        <button id="race-restart" type="button">↻ RACE AGAIN</button>
+      </div>
+    </div>
 
     <div id="porta-power">⚡ PORTA POWER ⚡</div>
 

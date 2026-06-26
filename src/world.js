@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { trackWaypoints } from './track.js'
 
 // Builds the static jobsite from a per-level `layout`. Tracks everything it
 // creates so a level can be torn down with dispose(). Textures are generated
@@ -23,6 +24,7 @@ export function createWorld(scene, physics, layout = {}) {
   for (const s of layout.sheds ?? []) buildShed(ctx, s)
   for (const b of layout.buildings ?? []) buildBuilding(ctx, b)
   for (const c of layout.cranes ?? []) buildCrane(ctx, c)
+  if (layout.track) buildTrack(ctx, layout.track)
   const cones = buildCones(ctx, layout.coneCount ?? 16, HALF)
 
   function dispose() {
@@ -300,6 +302,73 @@ function buildCrane(ctx, c) {
   const hook = new THREE.Mesh(new THREE.BoxGeometry(0.2, 2.2, 0.2), dark)
   hook.position.set(x + cos * (jib - 3), topY - 0.5, z + sin * (jib - 3))
   ctx.addMesh(hook)
+}
+
+// --- Oval race circuit: asphalt segments + jersey-barrier guardrails ---
+function buildTrack(ctx, spec) {
+  const n = spec.segments ?? 40
+  const width = spec.width ?? 14
+  const pts = trackWaypoints(spec, n)
+  const cx = spec.cx ?? 0, cz = spec.cz ?? 0
+  const asphalt = new THREE.MeshStandardMaterial({ color: 0x2c2c30, roughness: 0.95 })
+  const barrierMat = new THREE.MeshStandardMaterial({ color: 0xd9d2c4, roughness: 0.9 })
+  const off = width / 2 + 0.7
+
+  for (let i = 0; i < n; i++) {
+    const a = pts[i], b = pts[(i + 1) % n]
+    const dx = b.x - a.x, dz = b.z - a.z
+    const len = Math.hypot(dx, dz)
+    const yaw = Math.atan2(dx, dz)
+    const mx = (a.x + b.x) / 2, mz = (a.z + b.z) / 2
+
+    const seg = new THREE.Mesh(new THREE.PlaneGeometry(width, len + 0.6), asphalt)
+    seg.rotation.x = -Math.PI / 2
+    seg.rotation.z = yaw
+    seg.position.set(mx, 0.02, mz)
+    seg.receiveShadow = true
+    ctx.addMesh(seg)
+
+    // guardrails offset to inner & outer edges, following the curve
+    const nx = mx - cx, nz = mz - cz
+    const nl = Math.hypot(nx, nz) || 1
+    const ux = nx / nl, uz = nz / nl
+    for (const s of [-1, 1]) {
+      const bx = mx + ux * off * s
+      const bz = mz + uz * off * s
+      const bar = new THREE.Mesh(new THREE.BoxGeometry(0.6, 1.1, len + 0.4), barrierMat)
+      bar.position.set(bx, 0.55, bz)
+      bar.rotation.y = yaw
+      ctx.addMesh(bar)
+      ctx.addBody({ hx: 0.3, hy: 0.55, hz: (len + 0.4) / 2 }, { x: bx, y: 0.55, z: bz }, quatY(yaw))
+    }
+  }
+
+  // start/finish line: checkered stripe across the track at waypoint 0
+  const startYaw = Math.atan2(pts[1].x - pts[0].x, pts[1].z - pts[0].z)
+  const stripe = new THREE.Mesh(
+    new THREE.PlaneGeometry(width, 2.2),
+    new THREE.MeshStandardMaterial({ map: makeCheckerTexture(), roughness: 0.8 })
+  )
+  stripe.rotation.x = -Math.PI / 2
+  stripe.rotation.z = startYaw
+  stripe.position.set(pts[0].x, 0.04, pts[0].z)
+  ctx.addMesh(stripe)
+}
+
+function makeCheckerTexture() {
+  const c = document.createElement('canvas')
+  c.width = c.height = 64
+  const x = c.getContext('2d')
+  for (let i = 0; i < 8; i++) {
+    for (let j = 0; j < 8; j++) {
+      x.fillStyle = (i + j) % 2 ? '#fff' : '#111'
+      x.fillRect(i * 8, j * 8, 8, 8)
+    }
+  }
+  const t = new THREE.CanvasTexture(c)
+  t.wrapS = t.wrapT = THREE.RepeatWrapping
+  t.repeat.set(8, 1)
+  return t
 }
 
 // --- Grass area (visual only, sits just above the dirt) ---

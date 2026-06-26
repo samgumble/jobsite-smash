@@ -12,6 +12,7 @@ import { LEVELS } from './levels.js'
 import { createParticles } from './particles.js'
 import { createAudio } from './audio.js'
 import { createPortaPower } from './portaPower.js'
+import { createRace } from './race.js'
 
 // --- Renderer ---
 const canvas = document.querySelector('#game')
@@ -171,7 +172,12 @@ initPhysics().then((physics) => {
 
   // --- Levels: build / tear down / switch ---
   let levelIndex = 0
+  let race = null
   const levelLabel = document.querySelector('#level-name')
+  const raceHud = document.querySelector('#race-hud')
+  const raceResults = document.querySelector('#race-results')
+  const raceResultsText = document.querySelector('#race-results-text')
+  const ordinal = (n) => (n === 1 ? '1st' : n === 2 ? '2nd' : n === 3 ? '3rd' : `${n}th`)
 
   function buildLevel(index) {
     const def = LEVELS[index]
@@ -185,15 +191,36 @@ initPhysics().then((physics) => {
     if (levelLabel) levelLabel.textContent = `LVL ${index + 1}: ${def.name}`
     score.reset()
     setTimeout(() => score.arm(), 1500)
+
+    // Race mode for levels with a track; sandbox otherwise.
+    if (def.layout.track) {
+      race = createRace({
+        scene,
+        physics,
+        spec: def.layout.track,
+        getPlayerVehicle: () => vehicle,
+        hud: { lap: document.querySelector('#race-lap'), pos: document.querySelector('#race-pos'), countdown: document.querySelector('#countdown'), results: raceResults },
+        onFinish: (place, total) => {
+          if (raceResultsText) raceResultsText.textContent = `You placed ${ordinal(place)} of ${total}!`
+          if (raceResults) raceResults.classList.add('show')
+        },
+      })
+      race.start()
+      if (import.meta.env.DEV) window.__race = race
+      if (raceHud) raceHud.classList.add('show')
+    } else {
+      vehicle.reset({ x: 0, y: 2.3, z: 0 })
+      if (raceHud) raceHud.classList.remove('show')
+    }
   }
 
   function switchLevel(index) {
     if (index === levelIndex || index < 0 || index >= LEVELS.length) return
+    if (race) { race.destroy(); race = null }
     world.dispose()
     destructibles.dispose()
     levelIndex = index
     buildLevel(index)
-    vehicle.reset({ x: 0, y: 2.3, z: 0 })
     cameraRig.update(0, vehicle, true)
   }
 
@@ -201,6 +228,7 @@ initPhysics().then((physics) => {
     if (e.code === 'Digit1') switchLevel(0)
     else if (e.code === 'Digit2') switchLevel(1)
     else if (e.code === 'Digit3') switchLevel(2)
+    else if (e.code === 'Digit4') switchLevel(3)
     else if (e.code === 'KeyL') switchLevel((levelIndex + 1) % LEVELS.length)
   })
 
@@ -225,7 +253,10 @@ initPhysics().then((physics) => {
     flipTimer = 0
     gameOver = false
     if (gameOverEl) gameOverEl.classList.remove('show')
+    if (race) race.start() // re-grid + countdown
   }
+  const raceRestartBtn = document.querySelector('#race-restart')
+  if (raceRestartBtn) raceRestartBtn.addEventListener('click', resetGame)
   const resetBtn = document.querySelector('#reset')
   if (resetBtn) resetBtn.addEventListener('click', resetGame)
   const restartBtn = document.querySelector('#restart')
@@ -265,6 +296,7 @@ initPhysics().then((physics) => {
     while (accumulator >= fixedStep) {
       physics.step(fixedStep)
       vehicle.syncMeshes()
+      if (race) race.syncMeshes()
       accumulator -= fixedStep
     }
 
@@ -273,6 +305,7 @@ initPhysics().then((physics) => {
     score.update(delta)
     portaPower.update(delta)
     checkFlip(delta)
+    if (race) race.update(delta)
 
     // Engine sound tracks speed + throttle.
     const speed = vehicle.getSpeed()

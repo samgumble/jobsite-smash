@@ -149,4 +149,31 @@ export const LEVELS = [
       d.spawnPortaPotty({ x: -8, z: -14, yaw: 0.5 })
     },
   },
+
+  // ===== 4. RACE: jobsite grand prix (vs. AI machines) =====
+  {
+    name: 'Jobsite Grand Prix',
+    layout: {
+      groundColor: '#6f5736',
+      fenceHalf: 72,
+      coneCount: 0, // keep the track clear
+      track: { cx: 0, cz: 0, rx: 50, rz: 38, width: 14, segments: 40 },
+      cranes: [{ x: 0, z: 22, h: 24, jib: 15 }],
+      containers: [
+        { x: -24, z: -16, ry: 0, c: 0 }, { x: 24, z: -16, ry: 0, c: 1 },
+        { x: -24, z: 14, ry: 0, c: 2 }, { x: 24, z: 14, ry: 0, c: 3 },
+      ],
+      grass: [
+        { x: 0, z: 62, w: 130, d: 22 },
+        { x: 0, z: -62, w: 130, d: 22 },
+      ],
+    },
+    // a little infield laydown to smash if you go off-track (keep origin clear)
+    spawns(d) {
+      d.spawnBarrelCluster({ x: -16, z: 0 }, { count: 6 })
+      d.spawnBarrelCluster({ x: 16, z: 0 }, { count: 6 })
+      d.spawnCrateStack({ x: 0, z: -22 }, { base: 3 })
+      d.spawnPortaPotty({ x: 0, z: 26 })
+    },
+  },
 ]
