@@ -55,8 +55,29 @@ export function createRace({ scene, physics, spec, getPlayerVehicle, hud, onFini
     for (const o of opponents) o.vehicle.boost = b
   }
 
-  function driveAI(o) {
+  function driveAI(o, dt) {
     const v = o.vehicle
+
+    // Stuck recovery: if pinned against a wall, reverse + turn out, then resume.
+    if (state === 'racing') {
+      if (Math.abs(v.getSpeed()) < 1.5) o.stuckT = (o.stuckT || 0) + dt
+      else o.stuckT = 0
+      if (o.recoverT > 0) {
+        o.recoverT -= dt
+        o.input.forward = false
+        o.input.backward = true
+        o.input.left = o._recLeft
+        o.input.right = !o._recLeft
+        return
+      }
+      if (o.stuckT > 1.2) {
+        o.recoverT = 0.8
+        o.stuckT = 0
+        o._recLeft = Math.random() < 0.5
+        return
+      }
+    }
+
     const pos = v.getPosition()
     // steer toward a look-ahead waypoint for smooth racing lines
     const t = waypoints[(o.wp + 1) % N]
@@ -126,7 +147,7 @@ export function createRace({ scene, physics, spec, getPlayerVehicle, hud, onFini
     }
 
     // AI always navigates (frozen by boost=0 until GO)
-    for (const o of opponents) driveAI(o)
+    for (const o of opponents) driveAI(o, dt)
 
     if (state === 'racing' || state === 'finished') {
       advance(player)
@@ -139,8 +160,18 @@ export function createRace({ scene, physics, spec, getPlayerVehicle, hud, onFini
     if (hud.lap) hud.lap.textContent = `LAP ${Math.min(player.lap + 1, TOTAL_LAPS)}/${TOTAL_LAPS}`
     if (hud.pos) hud.pos.textContent = `${ordinal(rank)} / ${all.length}`
 
-    // freeze finished cars
-    for (const o of opponents) if (o.finished) o.vehicle.boost = 0
+    // Rubberbanding: opponents behind the player speed up, those ahead ease off,
+    // keeping the pack competitive. progressScore: +10 per waypoint, +1000 per lap.
+    if (state === 'racing') {
+      const ps = progressScore(player)
+      for (const o of opponents) {
+        if (o.finished) { o.vehicle.boost = 0; continue }
+        const diff = ps - progressScore(o) // > 0 => opponent is behind you
+        o.vehicle.boost = Math.max(0.85, Math.min(1.7, 1.2 + diff / 450))
+      }
+    } else {
+      for (const o of opponents) if (o.finished) o.vehicle.boost = 0
+    }
 
     if (state === 'racing' && player.finished) {
       state = 'finished'
