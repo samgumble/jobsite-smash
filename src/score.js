@@ -1,6 +1,6 @@
 // Score + combo system. A piece "scores" the first time it's knocked loose
 // (velocity over a threshold). Chaining smashes quickly builds a multiplier.
-export function createScore({ scoreEl, comboEl }) {
+export function createScore({ scoreEl, comboEl, onSmash }) {
   const POINTS = { brick: 10, pallet: 15, barrel: 25, crate: 20, cone: 5 }
   const COMBO_WINDOW = 2.5 // seconds to keep a chain alive
   const SMASH_SPEED = 4.0 // velocity that counts as "smashed"
@@ -53,6 +53,7 @@ export function createScore({ scoreEl, comboEl }) {
       if (sp2 > SMASH_SPEED * SMASH_SPEED) {
         s.scored = true
         registerSmash(s.type)
+        if (onSmash) onSmash(s.type, s.body.translation())
       }
     }
   }

@@ -10,6 +10,7 @@ export class CameraRig {
 
     this._pos = new THREE.Vector3()
     this._target = new THREE.Vector3()
+    this.shake = 0
 
     this.chase = { back: 11, height: 6, lookAhead: 2, lookUp: 1.4, smooth: 6 }
     this.top = { height: 48, smooth: 5 }
@@ -24,6 +25,11 @@ export class CameraRig {
     const i = this.modes.indexOf(this.mode)
     this.mode = this.modes[(i + 1) % this.modes.length]
     if (this.onModeChange) this.onModeChange(this.mode)
+  }
+
+  // Add a shake impulse (e.g. on impact); decays over time.
+  addShake(amount) {
+    this.shake = Math.min(this.shake + amount, 0.8)
   }
 
   // immediate=true snaps with no smoothing (use on spawn / mode switch).
@@ -54,6 +60,14 @@ export class CameraRig {
       const a = immediate ? 1 : 1 - Math.exp(-this.top.smooth * dt)
       this.camera.position.lerp(this._pos, a)
       this.camera.lookAt(this._target)
+    }
+
+    // Impact shake: jitter the camera position, decaying over time.
+    if (this.shake > 0.0005) {
+      this.camera.position.x += (Math.random() - 0.5) * this.shake
+      this.camera.position.y += (Math.random() - 0.5) * this.shake
+      this.camera.position.z += (Math.random() - 0.5) * this.shake
+      this.shake = Math.max(0, this.shake - dt * 2.5)
     }
   }
 }

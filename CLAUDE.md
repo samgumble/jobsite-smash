@@ -40,7 +40,17 @@ Score/combo for destruction. Portfolio piece.
 10. Performance pass: body sleeping, debris despawn, instancing
 11. Build + deploy to Netlify/Vercel
 
-## Current phase
+## Current phase (latest)
+Phase 9 juice done: particles.js (pooled GPU points: driving dust + debris
+bursts), audio.js (procedural Web Audio diesel engine + impact thuds, starts on
+first gesture), camera shake on impact (CameraRig.addShake), score.onSmash wires
+burst+thud+shake. Dozer: tracked Cat D-series, bodyScale 0.94, zero-mass blade
+collider that pushes ground objects, animated grouser-shoe tracks. Reset button
++ R key restore site/vehicle/score. Ground is dark brown.
+Remaining: Phase 7 (vehicle roster), Phase 10 (perf: instancing/despawn — ~295
+destructible bodies), Phase 11 (build + deploy).
+
+## Earlier phase log
 Phases 5, 6, 8 complete (8 brought forward at user request).
 - Phase 5 destructibles.js: brick wall (clean grid), pallet/barrel/crate piles
 - Phase 6 score.js: velocity-threshold smash detection, combo multiplier (x1..x8),

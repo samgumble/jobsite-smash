@@ -8,6 +8,8 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js'
 import { createDestructibles } from './destructibles.js'
 import { createWorld } from './world.js'
 import { createScore } from './score.js'
+import { createParticles } from './particles.js'
+import { createAudio } from './audio.js'
 
 // --- Renderer ---
 const canvas = document.querySelector('#game')
@@ -119,12 +121,28 @@ initPhysics().then((physics) => {
   const scorables = destructibles.items.map((i) => snapshot(i.body, i.type))
   for (const body of world.cones) scorables.push(snapshot(body, 'cone'))
 
+  // --- Juice: particles + procedural audio ---
+  const particles = createParticles(scene)
+  const audio = createAudio()
+  if (import.meta.env.DEV) window.__fx = particles
+  const DEBRIS_COLOR = { brick: 0xa8442a, barrel: 0xe0892e, crate: 0xc7a86a, pallet: 0xb07a3e, cone: 0xff6a1a }
+
   const score = createScore({
     scoreEl: document.querySelector('#score'),
     comboEl: document.querySelector('#combo'),
+    onSmash: (type, pos) => {
+      particles.burst(pos, DEBRIS_COLOR[type] ?? 0xc7a86a)
+      audio.thud(0.45 + Math.random() * 0.4)
+      cameraRig.addShake(0.28)
+    },
   })
   // Let the piles settle before scoring counts (no points for spawn jitter).
   setTimeout(() => score.arm(), 1500)
+
+  // Start audio on the first user interaction (autoplay policy).
+  const startAudio = () => audio.resume()
+  window.addEventListener('keydown', startAudio, { once: true })
+  window.addEventListener('pointerdown', startAudio, { once: true })
 
   // --- Vehicle ---
   const vehicle = new Vehicle(scene, physics, 'bulldozer', { x: 0, y: 2.3, z: 0 })
@@ -181,6 +199,20 @@ initPhysics().then((physics) => {
 
     score.detect(scorables)
     score.update(delta)
+
+    // Engine sound tracks speed + throttle.
+    const speed = vehicle.getSpeed()
+    const throttle = input.forward ? 1 : input.backward ? 0.6 : 0
+    audio.setEngine(speed, throttle)
+
+    // Kick up dust behind the tracks while moving.
+    if (Math.abs(speed) > 2) {
+      const p = vehicle.getPosition()
+      const f = vehicle.getForwardDirection()
+      particles.dust(p.x - f.x * 1.5, p.z - f.z * 1.5)
+    }
+    particles.update(delta)
+
     cameraRig.update(delta, vehicle)
     renderer.render(scene, camera)
   }
