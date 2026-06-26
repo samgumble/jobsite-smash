@@ -15,10 +15,13 @@ export function createWorld(scene, physics, layout = {}) {
   }
 
   buildGround(ctx, layout.groundColor ?? '#6f5736')
+  for (const r of layout.roads ?? []) buildRoad(ctx, r)
   buildFence(ctx, HALF)
   buildContainers(ctx, layout.containers ?? [])
   buildBarriers(ctx, layout.barriers ?? [])
   for (const s of layout.sheds ?? []) buildShed(ctx, s)
+  for (const b of layout.buildings ?? []) buildBuilding(ctx, b)
+  for (const c of layout.cranes ?? []) buildCrane(ctx, c)
   const cones = buildCones(ctx, layout.coneCount ?? 16, HALF)
 
   function dispose() {
@@ -217,6 +220,109 @@ function buildCones(ctx, count, half) {
     bodies.push(ctx.physics.addCone(g, { halfHeight: height / 2, radius }, { x, y: height / 2, z }, { density: 6, friction: 0.6 }))
   }
   return bodies
+}
+
+// --- Multi-story building under construction (solid base + framed floors) ---
+function buildBuilding(ctx, b) {
+  const { x, z, w = 10, d = 10, floors = 3, rot = 0 } = b
+  const fh = 3.2
+  const conc = new THREE.MeshStandardMaterial({ color: b.color ?? 0x9a9a93, roughness: 0.92 })
+  const q = quatY(rot)
+  const cos = Math.cos(rot), sin = Math.sin(rot)
+  const place = (lx, lz) => ({ x: x + lx * cos - lz * sin, z: z + lx * sin + lz * cos })
+
+  // solid ground story (this is what the vehicle collides with)
+  const base = new THREE.Mesh(new THREE.BoxGeometry(w, fh, d), conc)
+  base.position.set(x, fh / 2, z)
+  base.rotation.y = rot
+  ctx.addMesh(base)
+  ctx.addBody({ hx: w / 2, hy: fh / 2, hz: d / 2 }, { x, y: fh / 2, z }, q)
+
+  // framed upper floors: perimeter columns + a slab
+  const colGeo = new THREE.BoxGeometry(0.5, fh, 0.5)
+  const colsX = [-w / 2 + 0.5, 0, w / 2 - 0.5]
+  const colsZ = [-d / 2 + 0.5, 0, d / 2 - 0.5]
+  for (let f = 1; f < floors; f++) {
+    const y0 = f * fh
+    for (const lx of colsX) {
+      for (const lz of colsZ) {
+        if (lx === 0 && lz === 0) continue // skip center
+        const p = place(lx, lz)
+        const col = new THREE.Mesh(colGeo, conc)
+        col.position.set(p.x, y0 + fh / 2, p.z)
+        col.rotation.y = rot
+        ctx.addMesh(col)
+      }
+    }
+    const slab = new THREE.Mesh(new THREE.BoxGeometry(w, 0.25, d), conc)
+    slab.position.set(x, y0 + fh, z)
+    slab.rotation.y = rot
+    ctx.addMesh(slab)
+  }
+}
+
+// --- Tower crane (decorative; collider on the mast base) ---
+function buildCrane(ctx, c) {
+  const { x, z, h = 22, jib = 18, rot = 0 } = c
+  const yellow = new THREE.MeshStandardMaterial({ color: 0xfec810, roughness: 0.5, metalness: 0.3 })
+  const dark = new THREE.MeshStandardMaterial({ color: 0x2a2a2a, roughness: 0.6, metalness: 0.4 })
+  const cos = Math.cos(rot), sin = Math.sin(rot)
+
+  const basePad = new THREE.Mesh(new THREE.BoxGeometry(2.4, 1, 2.4), dark)
+  basePad.position.set(x, 0.5, z)
+  ctx.addMesh(basePad)
+  ctx.addBody({ hx: 1.2, hy: 1.5, hz: 1.2 }, { x, y: 1.5, z })
+
+  const mast = new THREE.Mesh(new THREE.BoxGeometry(0.9, h, 0.9), yellow)
+  mast.position.set(x, h / 2 + 1, z)
+  ctx.addMesh(mast)
+
+  const topY = h + 1
+  const cab = new THREE.Mesh(new THREE.BoxGeometry(1.6, 1.4, 1.6), yellow)
+  cab.position.set(x, topY, z)
+  ctx.addMesh(cab)
+
+  // jib (long) + counter-jib (short with counterweight), rotated about Y
+  const jibMesh = new THREE.Mesh(new THREE.BoxGeometry(jib, 0.5, 0.6), yellow)
+  jibMesh.position.set(x + cos * (jib / 2 - 0.5), topY + 0.6, z + sin * (jib / 2 - 0.5))
+  jibMesh.rotation.y = rot
+  ctx.addMesh(jibMesh)
+  const cj = 6
+  const counter = new THREE.Mesh(new THREE.BoxGeometry(cj, 0.5, 0.6), yellow)
+  counter.position.set(x - cos * (cj / 2), topY + 0.6, z - sin * (cj / 2))
+  counter.rotation.y = rot
+  ctx.addMesh(counter)
+  const cw = new THREE.Mesh(new THREE.BoxGeometry(1.4, 1.2, 1.4), dark)
+  cw.position.set(x - cos * cj, topY + 0.4, z - sin * cj)
+  ctx.addMesh(cw)
+  // hook hanging from near the jib end
+  const hook = new THREE.Mesh(new THREE.BoxGeometry(0.2, 2.2, 0.2), dark)
+  hook.position.set(x + cos * (jib - 3), topY - 0.5, z + sin * (jib - 3))
+  ctx.addMesh(hook)
+}
+
+// --- Asphalt roadway with dashed center line (visual only) ---
+function buildRoad(ctx, r) {
+  const { x = 0, z = 0, w = 10, l = 120, rot = 0 } = r
+  const road = new THREE.Mesh(
+    new THREE.PlaneGeometry(w, l),
+    new THREE.MeshStandardMaterial({ color: 0x2d2d31, roughness: 0.95 })
+  )
+  road.rotation.x = -Math.PI / 2
+  road.rotation.z = rot
+  road.position.set(x, 0.02, z)
+  road.receiveShadow = true
+  ctx.addMesh(road)
+  // dashed center line
+  const dashMat = new THREE.MeshStandardMaterial({ color: 0xf2c43a, roughness: 0.8 })
+  const cos = Math.cos(rot), sin = Math.sin(rot)
+  for (let t = -l / 2 + 3; t < l / 2; t += 7) {
+    const dash = new THREE.Mesh(new THREE.PlaneGeometry(0.4, 3), dashMat)
+    dash.rotation.x = -Math.PI / 2
+    dash.rotation.z = rot
+    dash.position.set(x + -sin * t, 0.03, z + cos * t)
+    ctx.addMesh(dash)
+  }
 }
 
 function quatY(yaw) {

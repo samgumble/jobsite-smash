@@ -41,6 +41,13 @@ Score/combo for destruction. Portfolio piece.
 11. Build + deploy to Netlify/Vercel
 
 ## Current phase (latest)
+Levels themed by construction sector: 1 Roadway Project (horizontal/civil:
+asphalt road + dashed line, jersey barriers, lots of cones, culvert pipes),
+2 Building Jobsite (vertical: multi-story framed building + tower crane + material
+laydown), 3 Hospital Campus (New Tower frame + wings + big crane + site trailers).
+world.js gained buildBuilding (solid base + framed floors), buildCrane, buildRoad.
+
+## Earlier note
 Levels: levels.js defines 3 (Open Jobsite, Demolition Yard, Container Yard).
 Switch with keys 1/2/3 (L cycles); HUD shows level name. world.js + destructibles
 now take a per-level layout and expose dispose() for teardown; main.js
