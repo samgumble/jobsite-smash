@@ -212,6 +212,28 @@ body {
   #controls { display: none; }
 }
 
+/* ===== Mute toggle (bottom-right) ===== */
+#mute {
+  position: fixed;
+  right: 14px;
+  bottom: 14px;
+  z-index: 15;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  background: var(--panel);
+  backdrop-filter: blur(3px);
+  font-size: 20px;
+  line-height: 1;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+#mute:hover { background: rgba(255, 82, 0, 0.55); }
+#mute:active { transform: scale(0.92); }
+#mute.muted { opacity: 0.6; }
+
 /* ===== Porta Power banner (Mario-star style) ===== */
 #porta-power {
   position: fixed;

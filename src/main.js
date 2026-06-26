@@ -234,6 +234,21 @@ initPhysics().then((physics) => {
     if (e.code === 'KeyR') resetGame()
   })
 
+  // --- Mute toggle (button + M) ---
+  const muteBtn = document.querySelector('#mute')
+  function toggleMute() {
+    audio.resume() // a click/key here counts as the gesture to start audio
+    const m = audio.toggleMute()
+    if (muteBtn) {
+      muteBtn.textContent = m ? '🔇' : '🔊'
+      muteBtn.classList.toggle('muted', m)
+    }
+  }
+  if (muteBtn) muteBtn.addEventListener('click', toggleMute)
+  window.addEventListener('keydown', (e) => {
+    if (e.code === 'KeyM') toggleMute()
+  })
+
   // --- Render loop ---
   let lastTime = performance.now()
   let accumulator = 0

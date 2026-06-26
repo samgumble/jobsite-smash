@@ -11,6 +11,8 @@ export function createAudio() {
   let rumbleLfo = null
   let noiseBuffer = null
   let started = false
+  let muted = false
+  const VOLUME = 0.35
 
   // Must be called from a user gesture (autoplay policy).
   function resume() {
@@ -22,7 +24,7 @@ export function createAudio() {
     ctx = new (window.AudioContext || window.webkitAudioContext)()
 
     master = ctx.createGain()
-    master.gain.value = 0.35
+    master.gain.value = muted ? 0 : VOLUME
     master.connect(ctx.destination)
 
     // pre-baked white noise for impacts
@@ -117,5 +119,17 @@ export function createAudio() {
     })
   }
 
-  return { resume, setEngine, thud, powerup }
+  function setMuted(m) {
+    muted = m
+    if (master) master.gain.value = m ? 0 : VOLUME
+  }
+  function toggleMute() {
+    setMuted(!muted)
+    return muted
+  }
+  function isMuted() {
+    return muted
+  }
+
+  return { resume, setEngine, thud, powerup, toggleMute, isMuted }
 }

@@ -71,7 +71,7 @@ export const LEVELS = [
         { x: 44, z: -4, ry: P2, c: 1 },
         { x: -46, z: 30, ry: 0, c: 2 },
       ],
-      barriers: [{ x: 0, z: 12, ry: P2, n: 6 }],
+      barriers: [{ x: 34, z: -6, ry: P2, n: 6 }],
       sheds: [{ x: -44, z: 48 }],
     },
     // material laydown: bricks, block, lumber, pallets around the build
